@@ -1,0 +1,974 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>DROP LAB · Simulador de marca</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;700;900&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0e0e11; --paper:#18181d; --paper2:#212128; --line:#2e2e37; --ink:#f3f2ec; --muted:#a3a3ae;
+  --lime:#c6ff3d; --pink:#ff3d8b; --violet:#7b5cff; --sun:#ffd23d;
+  --ok:#c6ff3d; --bad:#ff7a59; --r:16px;
+  --disp:"Unbounded","Space Grotesk",system-ui,sans-serif;
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:"Space Grotesk",system-ui,sans-serif;color:var(--ink);background:var(--bg);min-height:100vh;
+  background-image:radial-gradient(circle at 0% 0%,rgba(123,92,255,.22) 0,transparent 38%),radial-gradient(circle at 100% 15%,rgba(198,255,61,.12) 0,transparent 32%),radial-gradient(circle at 60% 100%,rgba(255,61,139,.12) 0,transparent 40%)}
+body:before{content:"";position:fixed;inset:0;pointer-events:none;opacity:.05;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence baseFrequency='.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)'/%3E%3C/svg%3E")}
+h1,h2,h3,.disp{font-family:var(--disp);letter-spacing:-.02em}
+button{font:inherit;cursor:pointer}
+.wrap{max-width:1060px;margin:0 auto;padding:20px 18px 60px;position:relative}
+header.top{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:20px;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:12px}
+.logo{width:44px;height:44px;border-radius:12px;background:var(--lime);color:#0e0e11;display:grid;place-items:center;font-family:var(--disp);font-weight:900;font-size:17px;transform:rotate(-8deg);box-shadow:4px 4px 0 var(--pink)}
+.brand b{font-family:var(--disp);font-size:17px;display:block}
+.brand small{color:var(--muted)}
+.pill{display:inline-flex;align-items:center;gap:6px;padding:7px 12px;border-radius:999px;background:var(--paper);border:1px solid var(--line);font-size:14px;font-weight:600}
+.btn{border:0;border-radius:12px;padding:11px 18px;font-weight:700;background:var(--lime);color:#0e0e11;transition:.15s transform,.15s box-shadow}
+.btn:hover{transform:translate(-2px,-2px);box-shadow:3px 3px 0 var(--pink)}
+.btn.ghost{background:transparent;color:var(--ink);border:1.5px solid var(--line)}
+.btn.ghost:hover{background:var(--paper2);box-shadow:none;transform:none}
+.btn.pink{background:var(--pink);color:#fff}
+.btn.pink:hover{box-shadow:3px 3px 0 var(--lime)}
+.btn.sm{padding:7px 12px;font-size:14px;border-radius:10px}
+.btn:disabled{opacity:.4;cursor:not-allowed;transform:none;box-shadow:none}
+.panel{background:var(--paper);border:1px solid var(--line);border-radius:var(--r);padding:22px}
+.hero{display:grid;grid-template-columns:1.25fr 1fr;gap:24px;align-items:start}
+.hero h1{font-size:clamp(30px,5.2vw,52px);margin:4px 0 14px;line-height:1.02;font-weight:900}
+.hero h1 .hl{background:var(--lime);color:#0e0e11;padding:0 .18em;border-radius:6px;display:inline-block;transform:rotate(-2deg)}
+.hero h1 .pk{color:var(--pink)}
+.hero p{color:var(--muted);line-height:1.55;margin:0 0 10px;font-size:16px}
+.tag{display:inline-block;font-family:var(--disp);font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;background:var(--pink);color:#fff;padding:5px 10px;border-radius:6px}
+.team-form label{font-weight:600;font-size:14px;display:block;margin:14px 0 6px;color:var(--muted)}
+input[type=text],textarea{width:100%;padding:12px 14px;border-radius:12px;border:1.5px solid var(--line);font:inherit;background:var(--bg);color:var(--ink)}
+input[type=text]:focus,textarea:focus{outline:none;border-color:var(--lime);box-shadow:0 0 0 3px rgba(198,255,61,.15)}
+.avatars{display:flex;gap:8px;flex-wrap:wrap}
+.av{width:44px;height:44px;border-radius:12px;border:2px solid var(--line);background:var(--bg);font-size:22px;display:grid;place-items:center}
+.av.sel{border-color:var(--lime);background:var(--paper2)}
+.preview{margin-top:16px;border-radius:14px;padding:18px;background:linear-gradient(135deg,#7b5cff,#ff3d8b);text-align:center}
+.preview .bn{font-family:var(--disp);font-weight:900;font-size:24px;line-height:1.1;word-break:break-word}
+.preview .sl{opacity:.9;font-size:14px;margin-top:4px}
+.rules{display:grid;gap:12px;margin-top:6px}
+.rule{display:flex;gap:12px;align-items:flex-start}
+.rule .n{flex:0 0 32px;height:32px;border-radius:9px;background:var(--lime);color:#0e0e11;display:grid;place-items:center;font-family:var(--disp);font-weight:900}
+.rule p{margin:5px 0 0;font-size:15px;color:var(--ink)}
+.cases{display:grid;grid-template-columns:repeat(auto-fit,minmax(285px,1fr));gap:16px;margin-top:18px}
+.case{position:relative;border-radius:var(--r);padding:20px;min-height:215px;display:flex;flex-direction:column;justify-content:space-between;overflow:hidden;border:0;text-align:left;transition:.15s}
+.case:hover{transform:translate(-3px,-3px);box-shadow:6px 6px 0 #000}
+.case h3{margin:8px 0 6px;font-size:22px;font-weight:900}
+.case p{margin:0;opacity:.9;font-size:14px;line-height:1.4}
+.case .em{font-size:34px}
+.case .art{position:absolute;right:14px;top:14px;width:92px;height:84px;opacity:.95;transform:rotate(6deg)}
+.case .art,.fhead .art{color:rgba(255,255,255,.9)}
+.case[style*='lime'] .art{color:#0e0e11}
+.fhead .art{width:70px;height:64px;flex:0 0 70px;opacity:.35}
+.logoimg{width:28px;height:28px;border-radius:8px;object-fit:cover;vertical-align:middle}
+.upl{display:flex;gap:12px;align-items:center}
+.upl .box{width:64px;height:64px;border-radius:14px;border:2px dashed var(--line);display:grid;place-items:center;overflow:hidden;background:var(--bg);font-size:12px;color:var(--muted);text-align:center}
+.upl .box img{width:100%;height:100%;object-fit:cover}
+.avatar{width:28px;height:28px;border-radius:50%;object-fit:cover;flex:0 0 28px}
+.msgrow{display:flex;gap:8px;align-items:flex-end}
+.msgrow.me{justify-content:flex-end}
+.bigl{width:96px;height:96px;border-radius:22px;object-fit:cover;box-shadow:5px 5px 0 #0e0e11}
+.case .big{position:absolute;right:-6px;top:-18px;font-family:var(--disp);font-weight:900;font-size:110px;opacity:.13;line-height:1}
+.case .meta{display:flex;justify-content:space-between;align-items:center;margin-top:14px;font-weight:700;font-size:14px}
+.case.locked{filter:grayscale(1);opacity:.45;cursor:not-allowed}
+.case.locked:hover{transform:none;box-shadow:none}
+.bar{height:8px;border-radius:9px;background:rgba(0,0,0,.18);overflow:hidden;margin-top:10px}
+.bar i{display:block;height:100%;background:currentColor;border-radius:9px}
+.stars{color:var(--sun);letter-spacing:1px}
+.deck{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px;margin-top:16px}
+.mini{background:var(--paper);color:var(--ink);border:1.5px solid var(--line);border-radius:14px;padding:14px;text-align:left;min-height:122px;display:flex;flex-direction:column;justify-content:space-between;transition:.15s}
+.mini:hover{transform:translate(-2px,-2px);border-color:var(--lime)}
+.mini .k{font-family:var(--disp);font-weight:900;font-size:24px;color:var(--lime)}
+.mini .t{font-weight:600;font-size:14px;line-height:1.3}
+.mini.done{background:#1d2410;border-color:#4d6a12}
+.mini.peek{background:#2a1520;border-color:#6b2445}
+.crumbs{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:6px}
+.scene{perspective:1600px;margin-top:14px}
+.flip{position:relative;transition:transform .7s cubic-bezier(.2,.8,.2,1);transform-style:preserve-3d;display:grid}
+.flip.back{transform:rotateY(180deg)}
+.face{grid-area:1/1;backface-visibility:hidden;-webkit-backface-visibility:hidden;background:var(--paper);border:1px solid var(--line);border-radius:20px;overflow:hidden}
+.face.rev{transform:rotateY(180deg)}
+.flip.back>.face:not(.rev),.flip:not(.back)>.face.rev{pointer-events:none}
+.fhead{padding:18px 22px;display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+.fhead h2{margin:4px 0 0;font-size:24px;font-weight:900}
+.fhead small{opacity:.85;font-weight:700;text-transform:uppercase;letter-spacing:.06em;font-size:12px}
+.num{font-family:var(--disp);font-weight:900;background:#0e0e11;color:#fff;width:42px;height:42px;border-radius:12px;display:grid;place-items:center;flex:0 0 42px;transform:rotate(6deg)}
+.fbody{padding:20px 22px 24px;display:grid;gap:16px}
+.chat{display:grid;gap:10px}
+.msg{max-width:82%;padding:11px 14px;border-radius:18px 18px 18px 4px;line-height:1.45;font-size:15px;background:var(--paper2);border:1px solid var(--line)}
+.msg .who{display:block;font-size:12px;font-weight:700;color:var(--muted);margin-bottom:3px}
+.msg.me{justify-self:end;background:var(--lime);color:#0e0e11;border-color:var(--lime);border-radius:18px 18px 4px 18px}
+.msg.me .who{color:#4b5d16}
+.doc{background:#f3f2ec;color:#1a1a1f;border-radius:10px;padding:14px;font-size:13.5px;font-family:ui-monospace,Menlo,monospace;white-space:pre-wrap;line-height:1.5;transform:rotate(-.6deg);box-shadow:4px 4px 0 var(--violet)}
+.task{background:rgba(198,255,61,.1);border:1.5px solid rgba(198,255,61,.5);border-radius:12px;padding:12px 14px;font-weight:600}
+.check{background:var(--bg);border:1.5px solid var(--line);border-radius:14px;padding:14px}
+.check h4{margin:0 0 8px;font-size:15px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.row input{flex:1;min-width:160px}
+.fb{margin-top:8px;font-weight:600;font-size:14px}
+.fb.ok{color:var(--ok)} .fb.bad{color:var(--bad)}
+.cl label{display:flex;gap:10px;align-items:flex-start;padding:7px 0;font-size:15px;cursor:pointer}
+.cl input{margin-top:3px;width:18px;height:18px;accent-color:var(--lime)}
+.path{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.path span{background:var(--paper2);border:1px solid var(--line);padding:5px 10px;border-radius:8px;font-weight:600;font-size:14px}
+.path i{color:var(--muted);font-style:normal}
+ol.steps{margin:0;padding-left:20px;line-height:1.6}
+ol.steps li{margin-bottom:4px}
+ol.steps b,.tip b{color:var(--lime)}
+.tip{background:rgba(123,92,255,.16);border:1px solid rgba(123,92,255,.4);border-radius:12px;padding:12px 14px;font-size:14px;line-height:1.5}
+.es{background:rgba(255,61,139,.12);border:1px solid rgba(255,61,139,.35);border-radius:12px;padding:12px 14px;font-size:14px;line-height:1.5}
+.es b{color:#ff8ab8}
+.actions{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:center}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.65);display:none;place-items:center;padding:16px;z-index:50}
+.modal.on{display:grid}
+.modal .panel{max-width:440px;width:100%}
+.toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%) translateY(120px);background:var(--lime);color:#0e0e11;padding:12px 18px;border-radius:12px;font-weight:700;transition:.3s;z-index:60}
+.toast.on{transform:translateX(-50%) translateY(0)}
+.burst{position:fixed;pointer-events:none;font-size:26px;z-index:70;animation:fly 1.1s ease-out forwards}
+@keyframes fly{to{transform:translate(var(--dx),var(--dy)) rotate(260deg);opacity:0}}
+table{width:100%;border-collapse:collapse;font-size:15px}
+th,td{text-align:left;padding:10px;border-bottom:1px solid var(--line)}
+th{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.podium td:first-child{font-size:22px}
+.code{font-family:ui-monospace,Menlo,monospace;background:var(--bg);border:1.5px dashed var(--lime);padding:14px;border-radius:12px;word-break:break-all;font-size:14px}
+.level{font-size:26px;margin:6px 0;font-weight:900}
+.timer{font-variant-numeric:tabular-nums}
+.marquee{overflow:hidden;white-space:nowrap;border-block:1px solid var(--line);margin:22px 0 4px;padding:8px 0;font-family:var(--disp);font-weight:700;font-size:13px;color:var(--muted);letter-spacing:.08em}
+.marquee span{display:inline-block;animation:mq 28s linear infinite}
+@keyframes mq{to{transform:translateX(-50%)}}
+.pola{background:#f3f2ec;padding:6px 6px 20px;border-radius:4px;box-shadow:5px 6px 0 rgba(0,0,0,.45);display:inline-block}
+.pola img{display:block;width:170px;height:96px;object-fit:cover;border-radius:2px}
+.case .pola{position:absolute;right:14px;top:14px;transform:rotate(5deg)}
+.case .pola img{width:150px;height:85px}
+.case .ctext{margin-top:118px}
+.collage{display:flex;justify-content:center;align-items:center;gap:0;margin:8px 0 26px;flex-wrap:wrap}
+.collage .pola:nth-child(1){transform:rotate(-7deg) translateY(6px)}
+.collage .pola:nth-child(2){transform:rotate(3deg);z-index:2;margin:0 -14px}
+.collage .pola:nth-child(3){transform:rotate(-2deg) translateY(10px)}
+.collage .pola:nth-child(4){transform:rotate(6deg);margin-left:-14px}
+.collage .pola small{display:block;color:#0e0e11;font-family:var(--disp);font-weight:700;font-size:10px;text-align:center;margin-top:5px;letter-spacing:.04em}
+.info{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px;margin-top:16px}
+.info .panel{padding:16px}
+.info h3{margin:0 0 6px;font-size:15px;color:var(--lime)}
+.info p,.info li{margin:0;color:var(--ink);font-size:15px;line-height:1.5}
+.info ul{margin:0;padding-left:18px}
+.why{background:rgba(255,210,61,.1);border:1px solid rgba(255,210,61,.4);border-radius:12px;padding:11px 14px;font-size:14.5px;line-height:1.5}
+.why b{color:var(--sun)}
+.hint{font-size:14px}
+.hint summary{cursor:pointer;color:var(--muted);font-weight:600;list-style:none}
+.hint summary::-webkit-details-marker{display:none}
+.hint[open] summary{color:var(--lime)}
+.hint div{margin-top:6px;padding:10px 12px;background:var(--paper2);border-radius:10px}
+.gl dt{font-family:var(--disp);font-weight:700;color:var(--lime);margin-top:12px;font-size:14px}
+.gl dd{margin:3px 0 0;line-height:1.5;font-size:15px}
+.modal .panel.wide{max-width:640px;max-height:84vh;overflow:auto}
+.tabs{display:flex;gap:6px;margin-bottom:12px}
+.goalbox{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin:12px 0}
+.goalbox>div{background:var(--paper2);border-radius:12px;padding:12px 14px}
+.goalbox h4{margin:0 0 6px;font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+.goalbox p,.goalbox li{margin:0;font-size:15px;line-height:1.5}
+.goalbox ul{margin:0;padding-left:18px}
+.rub td,.rub th{font-size:14px;vertical-align:top}
+@media (max-width:760px){.hero{grid-template-columns:1fr}.msg{max-width:92%}}
+@media (prefers-reduced-motion:reduce){.marquee span{animation:none}.flip{transition:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="brand"><div class="logo">DL</div><div><b>DROP LAB</b><small>Simulador de marca streetwear · con Odoo</small></div></div>
+    <div class="row" id="hud"></div>
+  </header>
+  <main id="app"></main>
+</div>
+<div class="modal" id="modal"><div class="panel" id="modalBody"></div></div>
+<div class="toast" id="toast"></div>
+<footer style="max-width:1060px;margin:0 auto;padding:0 18px 28px;color:var(--muted);font-size:12.5px;line-height:1.5;position:relative">DROP LAB es una adaptación educativa sin ánimo de lucro, para uso en el aula, inspirada en el juego <b>Scale-Up!</b> del Programa Educativo de Odoo. Odoo y Scale-Up! son marcas de Odoo S.A. Las marcas, personajes y empresas de esta app son ficticios.</footer>
+
+<script>
+const XLSX_B64="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";
+const XLSX_NAME="PopUp_Productos.xlsx";
+
+/* ================== CONTENIDO ================== */
+/* {M} = nombre de la marca del equipo */
+const CASES=[
+{id:"cv",title:"Lanza tu marca",emoji:"📦",bg:"var(--lime)",fg:"#0e0e11",
+ blurb:"Primer pedido al taller, primera venta a una tienda, primera factura… y primer susto.",
+ intro:"Has creado <b>{M}</b>, tu marca de streetwear. Para que crezca sin caos, vas a gestionarlo todo con un ERP: un programa donde compras, almacén, ventas y facturas están conectadas. Usarás Odoo, el mismo que utilizan miles de empresas.",
+ setup:{title:"Crea tu empresa en Odoo",steps:[
+  "Entra en <b>odoo.com</b> y pulsa <b>«Comienza ahora, es gratis»</b>.",
+  "Elige las apps <b>Ventas</b>, <b>Compras</b>, <b>Inventario</b> y <b>Facturación</b> (o Contabilidad).",
+  "Nombre de la empresa: <b>edu-</b> + tu marca. Ejemplo: <b>edu-{S}</b>.",
+  "País: <b>España</b>. Así Odoo carga el IVA (21 %) y el Plan General Contable.",
+  "Activa la base de datos desde el correo y elige contraseña."],
+  tip:"<b>¿Por qué «edu-»?</b> Con ese prefijo, Odoo te da una base de datos educativa gratuita que dura <b>24 meses</b>. Después se borra sin copia, así que no guardes allí nada que quieras conservar."},
+ cards:[
+ {t:"Crea tu primer producto",chat:[
+   {w:"Dani · Producción",x:"¡Ya tengo taller! <b>Estampados Atlántico</b>, en Ribeira. Nos hacen la sudadera oversize con nuestro logo."},
+   {me:1,x:"¿A cuánto sale?"},
+   {w:"Dani · Producción",x:"<b>25 €</b> la unidad. Si pedimos <b>50 o más</b>, nos la dejan a <b>18 €</b>. La podemos vender a <b>40 €</b> (sin IVA)."},
+   {me:1,x:"Vamos. La doy de alta en el catálogo."}],
+  task:"Crea el producto «Sudadera oversize {M}» con su precio de venta, su coste y las dos tarifas del taller.",
+  check:{type:"num",q:"Junto al precio de venta, Odoo muestra el precio con IVA incluido. ¿Cuál es?",a:48.4},
+  sol:{path:["Compras","Productos","Productos","Nuevo"],steps:[
+   "Nombre: <b>Sudadera oversize {M}</b> · Tipo: <b>Bienes</b> · marca <b>Rastrear inventario</b>.",
+   "Precio de venta: <b>40,00 €</b> · Coste: <b>25,00 €</b> (18 € también vale: depende de cuánto pidas).",
+   "Pestaña <b>Compras</b>: añade el proveedor <b>Estampados Atlántico</b> dos veces: cantidad 1 → 25 €; cantidad 50 → 18 €."],
+   tip:"40 € + 21 % de IVA = <b>48,40 €</b>, que es lo que pagaría el cliente final. Y el margen: vendes a 40 € lo que te cuesta 18 €, más del doble. Así funciona la moda."}},
+ {t:"Haz el pedido al taller",chat:[
+   {me:1,x:"Xiana, ¿cuántas sudaderas crees que venderemos el primer mes?"},
+   {w:"Xiana · Comunidad y ventas",x:"Con el ruido que estamos haciendo en redes, entre 40 y 60."},
+   {me:1,x:"Pues pido 50 para empezar. Y así entramos en el precio por volumen 😎"}],
+  task:"Haz el pedido de compra de 50 sudaderas a Estampados Atlántico y confírmalo.",
+  check:{type:"num",q:"¿Cuál es el total del pedido de compra (IVA incluido)?",a:1089},
+  sol:{path:["Compras","Pedidos","Solicitudes de presupuesto","Nuevo"],steps:[
+   "Proveedor: <b>Estampados Atlántico</b>.",
+   "Producto: <b>Sudadera oversize</b> · Cantidad: <b>50</b>. El precio baja solo a <b>18 €</b>.",
+   "Pulsa <b>Confirmar pedido</b>."],
+   tip:"50 × 18 € = 900 € + 189 € de IVA = <b>1.089,00 €</b>. ¿Has visto que el precio bajó solo? Es la tarifa por volumen que configuraste en la carta anterior."}},
+ {t:"Recibe la mercancía",chat:[
+   {w:"📞 Llamada entrante",x:"Buenas, soy el transportista de Estampados Atlántico. Llego a tu almacén en 5 minutos con 50 sudaderas."},
+   {me:1,x:"Perfecto, te espero en la puerta de atrás. Ahora valido la entrada."}],
+  task:"Registra la entrada de las 50 sudaderas en el almacén.",
+  check:{type:"num",q:"Abre la sudadera en Odoo. ¿Cuántas unidades tienes ahora a mano?",a:50},
+  sol:{path:["Inventario","Recepciones","WH/IN/00001","Validar"],steps:[
+   "Abre la recepción de <b>Estampados Atlántico</b> (estado: Listo).",
+   "Comprueba que la cantidad coincide con la demanda (50) y pulsa <b>Validar</b>."],
+   tip:"<b>Atajo:</b> si pulsaste el botón <b>Recepción</b> desde el propio pedido, acabas de ver la magia de la integración. Si llegan menos unidades, cambia la cantidad y Odoo te ofrecerá dejar el resto pendiente."}},
+ {t:"Revisa la factura del taller",bonus:true,chat:[
+   {w:"Marta · Gestoría",x:"Hola, me ha llegado la factura de Estampados Atlántico. ¿Puedes registrarla y revisarla? Vence a 60 días, no corre prisa pagarla."}],
+  doc:"ESTAMPADOS ATLÁNTICO S.L. · NIF B15000000\nRúa do Porto 12 · 15960 Ribeira (A Coruña)\n\nFactura nº 2026/118   Cliente: {M}\n\nSudadera oversize   50 ud × 19,50 €    975,00 €\n                       Base imponible    975,00 €\n                       IVA 21 %          204,75 €\n                       TOTAL           1.179,75 €\n\nVencimiento: 60 días",
+  task:"Crea la factura del proveedor a partir del pedido, revísala y confírmala.",
+  check:{type:"num",q:"¿Qué total (IVA incluido) muestra tu factura en Odoo tras autocompletarla con el pedido?",a:1089},
+  bonusQ:{q:"⭐ Pregunta extra: ¿cuánto te ha cobrado de más el taller (IVA incluido) respecto a lo pactado?",a:90.75},
+  sol:{path:["Contabilidad","Proveedores","Facturas","Nuevo"],steps:[
+   "Proveedor: <b>Estampados Atlántico</b> · Fecha: hoy · Plazo de pago: 60 días.",
+   "En <b>Autocompletar</b>, elige el pedido <b>P00001</b> y Odoo rellena la línea: 50 × 18 €.",
+   "Pulsa <b>Confirmar</b>."],
+   tip:"<b>Punto extra:</b> el taller facturó 19,50 €/ud en lugar de 18 €. Lo pactado son 1.089,00 € y te reclaman 1.179,75 €: <b>90,75 € de más</b>. Lo correcto es pedirle una <b>factura rectificativa</b>. Revisar facturas también es proteger el margen de tu marca.",
+   es:"🇪🇸 <b>En España:</b> una factura con un error se corrige con una <b>factura rectificativa</b>, que siempre debe hacer referencia a la factura original."}},
+ {t:"Primera venta a una tienda",chat:[
+   {w:"Nerea · Distrito Norte (Vigo)",x:"¡Hola! Soy Nerea, de Distrito Norte, la tienda multimarca de Vigo. Tus sudaderas lo están petando en Instagram. ¿Me mandas presupuesto de 20 a nerea@distritonorte.example?"},
+   {me:1,x:"¡Te llega ahora mismo!"},
+   {w:"Nerea · 1 hora después",x:"Recibido y aprobado. ¡Las quiero en tienda ya! 🔥"}],
+  task:"Crea el presupuesto, envíalo por correo y confírmalo como pedido de venta.",
+  check:{type:"num",q:"¿Cuál es el total del pedido de venta (IVA incluido)?",a:968},
+  sol:{path:["Ventas","Pedidos","Presupuestos","Nuevo"],steps:[
+   "Cliente: crea <b>Distrito Norte</b> (Vigo) con el contacto <b>Nerea</b> y su correo.",
+   "Línea: <b>Sudadera oversize</b> × <b>20</b> a 40 €.",
+   "<b>Enviar por correo electrónico</b>. Si te lo pide, configura el diseño del documento con el logo y los colores de {M}.",
+   "Pulsa <b>Confirmar</b> para convertirlo en pedido de venta."],
+   tip:"20 × 40 € = 800 € + 168 € de IVA = <b>968,00 €</b>. Ese presupuesto lleva tu marca: que se vea igual de cuidado que tu feed."}},
+ {t:"Envía el pedido",chat:[
+   {w:"Brais · Logística",x:"Hoy salgo antes, tengo examen del carné 😅 ¿Puedes validar los envíos de hoy? Sobre todo el de Distrito Norte."},
+   {me:1,x:"¡Suerte! Me encargo yo."}],
+  task:"Valida el albarán de salida para Distrito Norte.",
+  check:{type:"num",q:"Después del envío, ¿cuántas sudaderas te quedan en el almacén?",a:30},
+  sol:{path:["Inventario","Entregas","WH/OUT/00001","Validar"],steps:[
+   "Abre la entrega de <b>Distrito Norte</b> (estado: Listo).",
+   "Pulsa <b>Validar</b>."],
+   tip:"Odoo reserva el stock automáticamente. Si no hubiera unidades, podrías forzar la salida, pero el stock quedaría en negativo hasta regularizarlo."}},
+ {t:"Factura a la tienda",chat:[
+   {w:"Marta · Gestoría",x:"¿Puedes facturar los pedidos que ya has enviado? Quiero dejar el mes cerrado."},
+   {me:1,x:"Hecho en un momento."}],
+  task:"Factura el pedido de Distrito Norte.",
+  check:{type:"num",q:"¿Qué importe de IVA aparece en la factura?",a:168},
+  sol:{path:["Ventas","A facturar","Pedidos a facturar"],steps:[
+   "Abre el pedido <b>S00001</b> y pulsa <b>Crear factura</b>.",
+   "Elige <b>Factura normal</b> y luego <b>Crear borrador</b>.",
+   "Revisa las líneas y pulsa <b>Confirmar</b>."],
+   tip:"La opción <b>Anticipo</b> sirve para facturar solo una parte, por ejemplo una señal del 30 % en un pedido grande."}},
+ {t:"Registra el cobro",chat:[
+   {w:"📩 Banco · Aviso de transferencia",x:"Has recibido <b>968,00 €</b> de Distrito Norte.<br>Concepto: «20 sudaderas oversize»."},
+   {me:1,x:"¡Primer dinero de verdad! 💸 Lo registro."}],
+  task:"Registra el cobro en la factura de Distrito Norte.",
+  check:{type:"text",q:"¿Qué estado muestra ahora la factura?",a:["pagado","pagada","en proceso de pago","in payment","paid"],hint:"Escribe la etiqueta que ves en la factura"},
+  sol:{path:["Contabilidad","Clientes","Facturas"],steps:[
+   "Abre la factura de <b>Distrito Norte</b> y pulsa <b>Registrar pago</b>.",
+   "Diario: <b>Banco</b> · Importe: <b>968,00 €</b> · <b>Crear pago</b>."],
+   tip:"Verás «<b>En proceso de pago</b>» hasta que se concilie con el banco, y luego «<b>Pagado</b>». Las dos respuestas valen. En una empresa real, Odoo se conecta al banco y propone la conciliación automáticamente."}},
+ {t:"¿Ganamos o perdemos?",chat:[
+   {w:"Marta · Gestoría",x:"Para la reunión de mañana: ¿cuál es el resultado de {M} hasta ahora?"},
+   {me:1,x:"Lo miro en la cuenta de pérdidas y ganancias."}],
+  task:"Consulta el informe de pérdidas y ganancias.",
+  check:{type:"num",q:"¿Cuál es el resultado neto? (si es negativo, ponle el signo −)",a:-100},
+  sol:{path:["Contabilidad","Informes","Pérdidas y ganancias"],steps:[
+   "Truco: en la pantalla de inicio escribe «/pérdidas» para buscar en todos los menús.",
+   "Ingresos: 800 € · Compras: 900 € → resultado: <b>−100 €</b>."],
+   tip:"¿Pérdidas? Respira: te quedan <b>30 sudaderas</b> en el almacén. En España se usa la contabilidad <b>continental</b>, en la que la compra se registra como gasto al comprar, no al vender. Si vendes las 30 a 40 €, entran 1.200 € más. Lección de emprendimiento: <b>el stock también es dinero</b>.",
+   es:"🇪🇸 <b>Plan General Contable:</b> compras en la cuenta 600 (Compras de mercaderías) y ventas en la 700 (Ventas de mercaderías)."}}
+ ]},
+{id:"tpv",title:"Pop-up store",emoji:"🏪",bg:"var(--pink)",fg:"#fff",
+ blurb:"Un finde, un local y una caja: vende, factura, gestiona devoluciones y cuadra la caja.",
+ intro:"{M} abre una <b>pop-up store</b> en Santiago durante un fin de semana: tienda efímera, música, colas en la puerta… y un TPV (Terminal Punto de Venta) que tiene que cuadrar al céntimo.",
+ setup:{title:"Instala el Punto de venta",steps:[
+  "En Odoo, abre <b>Aplicaciones</b>, busca <b>Punto de venta</b> y pulsa <b>Activar</b>.",
+  "Comprueba que existe una tienda. Si no, créala desde <b>Configuración › Punto de venta</b> y llámala <b>{M} Pop-up</b>.",
+  "Descarga el archivo de productos: lo usarás en la primera carta."],
+  file:true,
+  tip:"En <b>Configuración › Métodos de pago</b> puedes añadir tarjeta o Bizum además del efectivo. En una pop-up, cuantos más métodos de pago, menos ventas se pierden."},
+ cards:[
+ {t:"Carga el merch",chat:[
+   {me:1,x:"Brais, para la pop-up quiero vender también accesorios. ¿Me pasas la lista?"},
+   {w:"Brais · Logística",x:"Toma: <b>" + "PopUp_Productos.xlsx</b>. Camisetas, gorras, totes, pegatinas… todo el merch."},
+   {me:1,x:"Genial, lo importo de golpe."}],
+  task:"Importa el archivo PopUp_Productos.xlsx en Odoo.",file:true,
+  check:{type:"num",q:"¿Cuántos productos nuevos se han importado?",a:8},
+  sol:{path:["Punto de venta","Productos","Productos","⚙","Importar registros"],steps:[
+   "<b>Subir archivo</b> → elige <b>PopUp_Productos.xlsx</b>.",
+   "Marca «Utiliza la primera fila como encabezado». Las columnas se asignan solas: nombre, precio, tipo y disponible en TPV.",
+   "Pulsa <b>Probar</b> y, si no hay errores, <b>Importar</b>."],
+   tip:"<b>Extra:</b> crea categorías de TPV (Ropa, Accesorios…) en la ficha de cada producto. Aparecerán como pestañas en la caja y cobrarás más rápido cuando haya cola."}},
+ {t:"Abre la caja",chat:[
+   {me:1,x:"Marta, abrimos en media hora. ¿Me dejas cambio para la caja?"},
+   {w:"Marta · Gestoría",x:"Te dejo <b>2 billetes de 50 €</b>, <b>4 de 20 €</b> y <b>2 de 10 €</b>. ¡Que vaya genial!"},
+   {me:1,x:"Perfecto, abro sesión."}],
+  task:"Abre una sesión del TPV con el efectivo inicial correcto.",
+  check:{type:"num",q:"¿Con qué efectivo de apertura has abierto la caja?",a:200},
+  sol:{path:["Punto de venta","Tablero","Abrir caja registradora"],steps:[
+   "Efectivo de apertura: <b>200,00 €</b> (100 + 80 + 20).",
+   "Usa el icono del billete para contar por billetes y que Odoo sume por ti."],
+   tip:"La <b>nota de apertura</b> reaparece al cerrar. Es útil si compartes la caja con alguien del equipo de la pop-up."}},
+ {t:"Vende 3 camisetas",chat:[
+   {w:"Iker · Cliente",x:"Brutales estas camisetas. Me llevo 3."},
+   {me:1,x:"¡Buena elección! Este finde, si te llevas <b>2 iguales, tienen un 20 % de descuento</b>."},
+   {w:"Iker · Cliente",x:"¡Top! Te pago con <b>70 €</b> en efectivo."}],
+  task:"Cobra la venta en efectivo aplicando bien la promo.",
+  check:{type:"num",q:"¿Cuánto cambio le devuelves a Iker?",a:7.08},
+  sol:{path:["Punto de venta","Caja"],steps:[
+   "Añade <b>2 camisetas</b> en una línea y aplícales un <b>20 %</b> de descuento (botón %).",
+   "Añade <b>1 camiseta</b> más en otra línea, sin descuento.",
+   "Total: 38,72 € + 24,20 € = <b>62,92 €</b>. Paga 70 € → cambio <b>7,08 €</b>."],
+   tip:"Si aplicaste el 20 % a las 3, cobraste 58,08 € y regalaste margen 😉. Leer bien las condiciones de una promo también es marketing."}},
+ {t:"Saca efectivo de la caja",chat:[
+   {w:"Xiana · Comunidad y ventas",x:"¡Llevamos 4 horas sin parar! He pedido cafés y bocadillos para el equipo y me faltan <b>12 €</b>. ¿Los sacas de la caja?"},
+   {me:1,x:"Voy, que me muero de hambre 🥪"}],
+  task:"Registra la salida de 12 € de la caja con su motivo.",
+  check:{type:"list",items:["He usado el menú ☰ › Entrada/salida de efectivo","He registrado una salida de 12 €","He escrito un motivo (por ejemplo, «Comida equipo pop-up»)"]},
+  sol:{path:["Caja","☰","Entrada/salida de efectivo"],steps:[
+   "Elige <b>Salida de efectivo</b> · Importe: <b>12 €</b>.",
+   "Motivo: <b>Comida equipo pop-up</b> · <b>Confirmar</b>."],
+   tip:"Todo dinero que sale de la caja sin registrar es un descuadre seguro al cerrar."}},
+ {t:"Vende con factura",chat:[
+   {w:"Uxía · Clienta",x:"¡Hola! Me llevo la sudadera edición pop-up. Es para mi estudio de diseño, ¿me hacéis factura?"},
+   {me:1,x:"Claro. Necesito tu nombre completo, NIF, dirección y teléfono."},
+   {w:"Uxía · Clienta",x:"Uxía Fernández · NIF 12345678Z · Rúa do Franco 23, 15705 Santiago de Compostela (A Coruña) · 600 444 666. Te pago con <b>60 €</b>."}],
+  task:"Vende la sudadera edición pop-up con factura a nombre de Uxía.",
+  check:{type:"num",q:"¿Cuánto cambio le devuelves a Uxía?",a:5.55},
+  sol:{path:["Caja","Cliente","Crear"],steps:[
+   "Añade la <b>Sudadera edición pop-up</b> (54,45 € IVA incluido).",
+   "Pulsa <b>Cliente</b> → <b>Crear</b> y rellena los datos de Uxía, incluido el <b>NIF</b>.",
+   "En la pantalla de pago marca <b>Factura</b> · Efectivo 60 € → cambio <b>5,55 €</b> · <b>Validar</b>."],
+   tip:"La factura se descarga automáticamente en PDF.",
+   es:"🇪🇸 <b>En España:</b> el tique de caja es una <b>factura simplificada</b>. Si el cliente pide factura completa (por ejemplo, para deducírsela como profesional), son obligatorios su <b>nombre y NIF</b>, y también la dirección si es empresa o profesional."}},
+ {t:"Gestiona una devolución",chat:[
+   {w:"Iker · Cliente",x:"Ey, vine esta mañana y me llevé 3 camisetas… pero al final con 2 me sobra. ¿Puedo devolver una?"},
+   {me:1,x:"Sin problema."}],
+  task:"Haz el reembolso de 1 camiseta. Piensa bien cuál devuelves.",
+  check:{type:"num",q:"¿Cuánto dinero le devuelves a Iker?",a:24.2},
+  sol:{path:["Caja","Pedidos","Reembolso"],steps:[
+   "Busca el pedido de Iker y selecciona <b>1 camiseta</b> de la línea <b>sin descuento</b>.",
+   "Pulsa <b>Reembolso</b> → efectivo <b>−24,20 €</b> → <b>Validar</b>."],
+   tip:"<b>Lógica comercial:</b> Iker se queda con 2 camisetas, que siguen cumpliendo la promo del 20 %. Por eso se devuelve la que pagó a precio completo. Otra opción: activar <b>tarjetas regalo</b> y reembolsar en saldo, para que el dinero se quede en la marca."}},
+ {t:"Cierra y cuadra la caja",chat:[
+   {w:"Leo · Equipo pop-up",x:"¡Qué día! Me tengo que ir pitando. ¿Cierras tú y haces el arqueo? Hay que contar todo lo que hay en la caja."},
+   {me:1,x:"Vete tranquilo, yo cierro."}],
+  task:"Cierra la sesión del TPV con el arqueo correcto.",
+  check:{type:"num",q:"¿Cuánto efectivo debe haber en la caja al cerrar?",a:281.17},
+  sol:{path:["Caja","☰","Cerrar caja registradora"],steps:[
+   "Apertura 200 € + camisetas 62,92 € + sudadera 54,45 € − comida 12 € − devolución 24,20 € = <b>281,17 €</b>.",
+   "Introduce el conteo y comprueba que la <b>diferencia es 0,00 €</b>.",
+   "Pulsa <b>Cerrar caja registradora</b>."],
+   tip:"¿Te sale un descuadre? Repasa la carta de la promo: es el error más habitual."}},
+ {t:"Analiza el finde",chat:[
+   {w:"Xiana · Comunidad y ventas",x:"Quiero subir un post de agradecimiento con datos. ¿Qué tal ha ido la pop-up?"},
+   {me:1,x:"Ahora te digo, saco el informe de ventas."}],
+  task:"Saca el informe de detalle de ventas.",
+  check:{type:"num",q:"¿Cuál es el total cobrado, ya descontada la devolución (IVA incluido)?",a:93.17,alts:[117.37]},
+  sol:{path:["Punto de venta","Informes","Detalles de ventas"],steps:[
+   "Fechas: de ayer a hoy · <b>Imprimir</b>.",
+   "Ventas 117,37 € − devolución 24,20 € = <b>93,17 €</b>."],
+   tip:"<b>Para pensar:</b> si fueras a repetir la pop-up, ¿qué dato miraríais primero: el producto estrella, el ticket medio o las devoluciones? ¿Y cuál contaríais en redes?"}}
+ ]},
+{id:"web",title:"El drop online",emoji:"💻",bg:"var(--violet)",fg:"#fff",
+ blurb:"Web, SEO, variantes, venta cruzada y blog para lanzar tu primer drop.",
+ intro:"La pop-up fue un éxito y la comunidad pide más. Toca lanzar el <b>Drop 01</b> online: una colección limitada con su propia web, en colaboración con la ilustradora gallega <b>Lúa Ilustra</b>.",
+ setup:{title:"Instala el Comercio electrónico",steps:[
+  "En <b>Aplicaciones</b>, activa <b>Comercio electrónico</b>.",
+  "En el asistente, describe el negocio: «tienda online de streetwear de edición limitada».",
+  "Elige paleta de colores (¡los de {M}!), añade la función <b>Noticias / Blog</b> y pulsa <b>Crear mi sitio web</b>."],
+  tip:"La IA del asistente genera una primera versión de la web. Tu trabajo es que tenga <b>personalidad de marca</b>: que nadie la confunda con la de otra."},
+ cards:[
+ {t:"Diseña la home",chat:[
+   {me:1,x:"Publicamos la web nueva. ¿Qué ponemos en la home?"},
+   {w:"Xiana · Comunidad y ventas",x:"Arriba, una portada potente con una foto tipo lookbook de fondo."},
+   {w:"Xiana · Comunidad y ventas",x:"Después, cifras de comunidad: «+5.000 seguidores», «+300 pedidos», «Envíos a toda España». Con fondo en <b>degradado</b>."},
+   {w:"Xiana · Comunidad y ventas",x:"Y 3 columnas con nuestros valores: «Diseño local», «Edición limitada», «Hecho en Galicia»."}],
+  task:"Edita la home con los tres bloques que pide Xiana y publícala.",
+  check:{type:"list",items:["Portada con una imagen tipo lookbook de fondo","Bloque de cifras con fondo en degradado","3 columnas con los valores de la marca","Página guardada y publicada (la hemos revisado en el móvil)"]},
+  sol:{path:["Sitio web","Editar"],steps:[
+   "Arrastra un bloque de portada; en <b>Fondo › Imagen › Reemplazar</b>, busca «streetwear» o «urban» (Odoo sugiere imágenes gratuitas).",
+   "Añade un bloque de <b>números/métricas</b> y, en Estilo › Fondo, elige <b>Degradado</b>.",
+   "Añade un bloque de <b>3 columnas</b> y edita los títulos.",
+   "<b>Guardar</b> y comprueba que pone <b>Publicado</b>."],
+   tip:"<b>Ojo de marketer:</b> las cifras son prueba social. Deben ser reales: inflarlas destruye la confianza de tu comunidad en cuanto alguien lo detecta (y en España puede ser publicidad engañosa)."}},
+ {t:"Crea la ficha del hoodie",chat:[
+   {w:"Xiana · Comunidad y ventas",x:"¡La home ha quedado 🔥! ¿Subimos ya el hoodie del Drop 01?"},
+   {me:1,x:"Voy. Precio: <b>45 €</b> sin IVA."},
+   {w:"Xiana · Comunidad y ventas",x:"Pídele a la IA la descripción, pero que suene a nosotros, no a catálogo de grandes almacenes."}],
+  task:"Crea el «Hoodie Drop 01» en la web, con imagen y descripción.",
+  check:{type:"num",q:"¿Qué precio ve el cliente en la ficha web del hoodie?",a:54.45,alts:[45],altMsg:"Vale si tu web muestra precios sin IVA, pero a un cliente particular hay que mostrarle el precio con IVA (54,45 €)."},
+  sol:{path:["Sitio web","Nuevo","Producto"],steps:[
+   "Nombre: <b>Hoodie Drop 01</b> · Precio: <b>45,00 €</b> · Impuesto: <b>IVA 21 %</b>.",
+   "Añade la imagen principal y escribe la descripción con el comando <b>/IA</b>. Después edítala con el tono de {M}.",
+   "<b>Guardar</b> y publicar."],
+   tip:"45 € + 21 % = <b>54,45 €</b>. Una buena ficha de producto responde a tres dudas: cómo sienta (fit), de qué está hecho y por qué es especial.",
+   es:"🇪🇸 <b>Normativa de consumo:</b> al consumidor final se le debe mostrar el <b>precio final completo, impuestos incluidos</b>."}},
+ {t:"Mejora el SEO",chat:[
+   {w:"Xiana · Comunidad y ventas",x:"Busco «sudaderas oversize» en Google y no salimos ni de broma. ¿Trabajamos el SEO de la home?"},
+   {me:1,x:"Voy con la herramienta de SEO de Odoo para elegir bien las palabras clave."}],
+  task:"Optimiza el SEO de la página de inicio.",
+  check:{type:"list",items:["Título SEO con la palabra clave (ej.: «Sudaderas oversize de edición limitada | {M}»)","Meta descripción atractiva (unos 150 caracteres)","Palabra clave «sudaderas oversize» añadida y revisadas las ideas relacionadas","Alguna idea relacionada usada en un titular de la página"]},
+  sol:{path:["Sitio web","Sitio","Optimizar SEO"],steps:[
+   "Título: <b>Sudaderas oversize de edición limitada | {M}</b>.",
+   "Descripción: «Streetwear diseñado en Galicia. Sudaderas oversize y camisetas en drops limitados. Cuando se agota, no vuelve».",
+   "Palabra clave: <b>sudaderas oversize</b>. Odoo indica si aparece en H1, H2, título (T), descripción (D) y contenido (C).",
+   "Usa las ideas relacionadas (hombre, mujer, baratas…) en algún titular. Elige las que encajen con la marca."],
+   tip:"No todas las palabras clave te convienen: «baratas» atrae tráfico, pero ¿encaja con una marca de edición limitada? El SEO también es <b>posicionamiento de marca</b>."}},
+ {t:"Añade tallas y colores",chat:[
+   {w:"Xiana · Comunidad y ventas",x:"¡Nos están llegando mensajes preguntando por tallas y colores!"},
+   {me:1,x:"Activo las variantes. ¿Qué opciones hay?"},
+   {w:"Xiana · Comunidad y ventas",x:"Tallas <b>S, M, L y XL</b>. Colores: <b>negro</b> (R20 G20 B20), <b>crema</b> (R240 G230 B210) y <b>lima</b> (R198 G255 B61)."}],
+  task:"Configura las tallas y los colores del hoodie.",
+  check:{type:"num",q:"¿Cuántas variantes ha generado Odoo para el hoodie?",a:12},
+  sol:{path:["Sitio web","Configuración","Ajustes","Variantes de producto"],steps:[
+   "Activa <b>Variantes de producto</b> y guarda.",
+   "En el hoodie, pestaña <b>Atributos y variantes</b>: añade <b>talla</b> (S, M, L, XL) y <b>color</b> (negro, crema, lima).",
+   "En el atributo color, pon el tipo de visualización <b>Color</b> y asigna los códigos RGB."],
+   tip:"4 tallas × 3 colores = <b>12 variantes</b>. Cada una tiene su propio stock: así sabrás si se agotó la M en lima sin quedarte sin la L en negro."}},
+ {t:"Haz una compra de prueba",chat:[
+   {w:"Xiana · Comunidad y ventas",x:"Antes de anunciarlo en stories: ¿haces una compra de prueba del hoodie, <b>talla M, color crema</b>?"},
+   {me:1,x:"Voy."}],
+  task:"Haz una compra de prueba completa en la web.",
+  check:{type:"num",q:"¿Cuál es el total del carrito (IVA incluido)?",a:54.45},
+  sol:{path:["Ir al sitio web","Tienda","Hoodie Drop 01"],steps:[
+   "Elige talla <b>M</b> y color <b>crema</b> → <b>Añadir al carrito</b>.",
+   "Pedido › Dirección › Pago. Para probar sin dinero real, usa el proveedor de pago <b>Demo</b>.",
+   "Total: 45 € + 9,45 € de IVA = <b>54,45 €</b>."],
+   tip:"Ponte en la piel del cliente: ¿cuántos clics hasta pagar? Cada paso de más en el checkout es un carrito abandonado."}},
+ {t:"Sube el ticket medio",chat:[
+   {w:"Xiana · Comunidad y ventas",x:"El mes pasado facturamos <b>4.000 €</b> online, con un ticket medio de <b>45 €</b>. Casi todo el mundo compra solo una prenda…"},
+   {me:1,x:"Creo la «Gorra Drop 01» a <b>20 €</b> y la ofrecemos como opción al comprar el hoodie. Outfit completo 🧢"}],
+  task:"Crea la gorra como producto opcional del hoodie y pruébalo en el carrito.",
+  check:{type:"num",q:"Con 1 hoodie + la gorra en el carrito, ¿cuál es el total (IVA incluido)?",a:78.65},
+  sol:{path:["Sitio web","Productos","Nuevo"],steps:[
+   "Crea <b>Gorra Drop 01</b> · Tipo: <b>Bienes</b> · Precio: <b>20 €</b>.",
+   "Abre el hoodie → pestaña <b>Ventas</b> → <b>Productos opcionales</b>: Gorra Drop 01.",
+   "Añade el hoodie al carrito: aparecerá una ventana que ofrece la gorra. (45 + 20) × 1,21 = <b>78,65 €</b>."],
+   tip:"<b>Cross-selling</b> (complementos) sube el ticket medio: de 54,45 € a 78,65 €. <b>Up-selling</b> (ofrecer algo superior) también. Prueba con «productos alternativos» para sugerir la edición pop-up."}},
+ {t:"Anuncia la colab en el blog",chat:[
+   {w:"Xiana · Comunidad y ventas",x:"La colab con Lúa Ilustra merece un post. Así lo enlazamos desde Instagram y TikTok y gana posicionamiento."},
+   {me:1,x:"¡Hecho! Creo el blog y escribo la primera entrada."}],
+  task:"Publica una entrada de blog sobre la colaboración.",
+  check:{type:"list",items:["Entrada creada en el blog «Noticias»","Título: «Así nace nuestra colab con Lúa Ilustra»","Tiene imagen de portada","Texto revisado (si usasteis /IA, lo hemos adaptado al tono de la marca)","Enlace al Hoodie Drop 01 dentro del post","Entrada publicada"]},
+  sol:{path:["Sitio web","Nuevo","Entrada de blog"],steps:[
+   "Blog: <b>Noticias</b> · Título: <b>Así nace nuestra colab con Lúa Ilustra</b>.",
+   "Portada: haz clic en el título y usa el icono 📷 junto a «Fondo».",
+   "Redacta con <b>/IA</b>, revisa, enlaza el producto, <b>Guardar</b> y publica."],
+   tip:"Un buen post de colab cuenta la historia (cómo nació la idea, qué significa el diseño) y termina con una llamada a la acción: «Disponible solo hasta agotar existencias»."}}
+ ]}
+];
+
+
+const IMG={"cv": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAQDAwMDAgQDAwMEBAQFBgoGBgUFBgwICQcKDgwPDg4MDQ0PERYTDxAVEQ0NExoTFRcYGRkZDxIbHRsYHRYYGRj/2wBDAQQEBAYFBgsGBgsYEA0QGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBj/wAARCABwAMYDASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAPwD6Et9M8VaZ8Yfh1FffEC7123ube+aOO/sYVeFhaoSd8YXcCGxz+ddD8WV1tPhJqSiLT7tvPmwAzQZBSX1DjODXMX3iCMfFn4TXL2t9CfJvlYT2csfBsFPGV55A6Vq/EXxZpU/w01JJ9TgTbe3CfvMpjCS4HIHtXl0px1jfr+iO+cZXT/rdn5m3HiiwkN9aFWQXNtYJG7Bj/wAe8ZRjgL0JPX+ddJ8IfE+ieG/jV4V12/lnltbDUI55UtreSSUqAeEQLljz0qrcmL7DrM0aR71stGAfaM8xEcHOeT6daf8ADbxFb+F/jD4V1G8e9QW9/FcOIIGlkCBiCcD8fyNYScXPSPb8jeKfJv3Prz4v/tD/AAq8W+C4dHxrVvOsttKv9oaTJGjBZkZhz3wp478eteB/GHxb8M/E2t6VqGi3TxvHqk8tzNPZNbuYGjwoywy3zfw9uteoeJP2lbTxzZ6loV9oNgmnrLbHes5uZ4hDLGxeWMA7sqpyFGeg5rlfif8AEX4aeOPE+g6b4Iupbq5h1me6lj+zyRR+U8BUHDcZ3Y4AzXUpwqpyRg4TpNRkfLniDTrfUPEl/dWF3Ym2lmLRlrhVO3PoelL4V0e103xJb6pq8Nnf2sUnNvFqaQM/HGHw2COD0PSuwk+Hnif4gfFjxFpnhay+0T28/mSFphCkYZsLuJ7k5AA9D2FJpPwt1SG21a3v7gteWrklrY+dBG65G0yDjn1HH1rOeIp042k7Fww86krxVzmPEmgWeo3slxoNgtnbY+W2vdWhuXByeRIFTAPpjj1rAi8L3sa4mtrMHvv1GIfyavVdZ+CXxI0T4V6n4m1fQ1s7OC2+2bnvI3kaJiCGVFJPQg844zXB+BfC2teKbuePSbWO4a0iM0zTMFWNc4BJPqf5HsKr28YU3Jysl1uYzhrqihb+FLiWdQ8WnIjAncb5D09Pm9eKs6D4fuYPENtPe2FnHBEWd2a4UjAU/wC0cnPT1rtn+HV5faRAmnmK81PzVh+zxIoDljwqt6gnv1qPWfhdr3g17G88V6ZaQW87yRtGkyStGyDOHK5AOcEYJ6GlTxlGpJQjUV30vq7dkFWlKjbniefxWlhbX851mxnYTw+ZA1pIqt83IY7sjBHbrVvQvBGqeJ7u/n0PSJL2Kztmu7gFwBHEEBZ25HC7gSenSob2IwWsEzoAHiLbvXp1r6L/AGcfh54f8XeCb2/1a8vIJYb8RBbfywGTyIjg7lORz06e1ZZliZYOk6i30N8BRjiaig9tTxiL4Q/EPSmuJU8NXKmGO3eQuyHYtx/qCef48jb61ov8N/ihbaqLK08KajKzXkmnJG8C+Y1zGu6SHAY/MoOSOuK+rPEfww8B6NHIf7Y1aW4WAvHCWhAwvKbiU5x/D6Y4xVzTPhr8P9XlbyfEOswXrSGYIxiD7u7qQvJI6kckda+WfE0ZT5JWv6f8E9tZXSWik/6+R8ZaxJ8QvD/hyzvLzSpLKzvIzJb3flAGZAWGVbPQFGGR/dPNeh6LoEutfCbRLtzJLNPHcFmZixJD9cnJPWu6+PPw68PeEvAEtzp19cXDPBLEguET9yo+fbHtACgknIAxya8mGmajqPw00J7afxVbQLathrafbbNljuCogLZ6bifUAV3wxH1ygpRtH3t/6Zm6SwtVp3krbGdcaYttxIMuDjc3X9azrizeLxFC4jZla2dz5eWxhlycDnArmLzToorY3Kate3U+8DPkyr35+dq6HQ/EOn+HoXfUbi6lN1YSW6IY2yrNIrZzjn7vIz3Fes6MqcXZ8z7WPOVZTktLIktZLW91B7WwjeacI0pUIF4XGTljx1FPhnjupSVbgEriR8Yx7CrGqeO08iFovD/+i27F1VYBFtYkEEtzkZH3cDr1rI8PzSzW0lwbeVI5HZw2wHcS3NROkuTnRrCo+flZ6hrdomqeJ5p7KPyTJcGGRC3ClR98nsCFJPpg+1ZuvPYDwNbxabbXI8vUTvuGwxuCYjzt/hAAPHPXk16Rq2m+EZNVur2LxdpNnHqEKrKrXCboXIO5gNw69MdRuNcb8RrnwnbeFtF0Xw1qNpqZhuZLi4ZJgckoBlsfoPSvOpUZxqczRMY2lc4SGEuu+SC4fPTdMBj8KK6Xw5J8P7Hw953iLTLm7vWlKm3ggllCpjKsGBAx1Byc8iiun2d9bnT7W2lj7y8TeKdIg8e/Du7FxIW0FGe/hRCXVLq0EMBA7hnIAPsfQ103iu7ttT+G+otaXcVxE95OwMUocEFJR1BIIyCPwPpX59SfHPWWt9/9gWod5lkNxcXMshZElMqx5IHyjcVGOgxjFHhT49eIvCWiaVp+jaNpslvpiXEcPmXE5JEshchtrDgbmAAxwxz1ralVrXvNHHKlC2jOV1DVbHSJNUsry2llmltdHeCEY2P5Ue9w57DBXp61xmq63qGr6k11dkxMcqrW7FSinsDnNX/GettrPjJL5reG2lktQ80MJYorEAYXcScABRye1ZWnaPq2rxTS6dYT3EUO3zpVX5ItzBRuY8DJIGM969SnGMIKc9LpXucNWo3JxT0Rnm8gs4onsUm+0sCrSKNhT1AbPOc4J+tafhzWr/R9Wi1KNYoFgBwIkUsoIwSCwPPPX1p2p+Ftf0m0ivNR0qeG2YAibGVGWYDP93JU4zjNZly3l6LOw6sQP1rWE4VFeDujG7R+gHwU022sPA03i3Q7uDUG8TSDUbsz24iZW27PJyMnapDAgk8kkYzXTaZFpfhTRo9J0TwpuVCd0aFpNjMWOQzfKRgAc8jPIwMHw39lzxix8Jan4Yml3LYXQuIgT/BLnI+gdCf+BV9CWviDTftK20sxDZ5OMqDgnk185jqkKVR+1klr1PaoSSppl21sNZ8R6Rd6d4ktrC20u6heKTT4UEjOrKQTJI4OTg9hXkXhf4VaX8LPBWp+E7F49c0zWQ0lxPcRCCeSNl2qm5edqrnv1JIxnFe+eaqaJdzKc4hYgj/drzvxNqEUPhXT7+X92lvbRtLITxtZM5/DAry87VRYOUabd1Z+tn/TFOCl73Y4USLp0NrpXhTwOrNEnlJKxMeAMfK8rZbGc5KcnBAI5NXfGngPV/HHwrk0jW9Q0yz1NnDWP2SzEcELqrYj7sVK7gTnjOcVz3gL46+EfEniKDQ3Seyurl/Ls2mwyzEk7QSPuMeyn6ZzXpviO8Ed/wCH4eSsk0zFQcbsQsa+SbxeCrRco8k1rr/X3/icmkkfnxr8Uq6dbWjgrLAhiljlTGxgcEHj1B/Kvev2efEV1pHw11pbWyu55FujIrQRgqGFtHjqw9M9K4L4zaPBYfFjVJFu4bSK6hGoRwyDhmcYZVwOpYN1rrvgFfpF4a1RioXdfZ2n/rjHxX6TmNeONwKqr7STLyqLp1rep2Gt+MNR1nSpb25sr1rpIVikbYAJF6K3Xg84P4GtfS/Ft5HrEUOn2l5bkTJ9oukRVAGR8ikt93jGOrfSsXWNIe0F+1sWNlLbOykNjyySBsP55z6VPbeGNSu7hIb7yrSwibIRHDs30x3Pqa+C+ppNNx1v/keyvacxn/tIeIH1DwOAbK9tlCzAGeIJnIUYHJrzvRpoNK8B6ct/DeadObNAJ4bgGSQZYjEZPyqAw+pNdZ+0PMZPAES+nmAD/vmvILydWtbZ5bPQJZzbxAveXJhmOFxjbnGBX2OW0/8AZkl/M/63RhjpWru/Zf1syp4n1u31HQlhj8R69qv70Ew3lssMf1BA61f8HeFoPEfmRXZtYIrSwkvGF5IwIKuuACOSxJH4Zrgri7N1b7HmSchgdqIF7/7oruvA9z4mPiDTdB8MafaSXOsIlg/nIXZUeQZJJ9MbtwHABr2sTTqezapaS/4Y8qhOHOnLY3tO8L61rWty6cLKPToY9OGo7nHmG4iJAUcnABJI9cVjae8F3pB+yWMMSQMyIojd1BVvr7dfeu5hv/DttdT3Gmax4wfdbnTmnS3hlSSKN8AR7nyEyuQcAmoU0z4YnSrCxN/45sfJLNJNBpkDM5LEnP7znrWKw7cbWsbvERUtNThUeKRW2W8anYc/6OeRnjGa0vD+mTa5r0Om2kkcPnHrLbjHyruPX6cV28WhfBWTT3SfxX4/t7ov8kq6GjbV57CTBJzz9K1YfB1l4f8AHWg6j4Q8Ra00OoaXcapK+oxpG1lZojKZnjzkE4+UZ5GPWp9jJboft4u9jyHV/AOqapp8OqRXsbStK8JEUbZYIdu5gpwOQQOPxor2a0l+Gl54QsdKX4x3VpFCzzrIfDMzM+9ixySR3Y0V1KVSKsloczUJO7ZzPgv4q+GtK8NWun+LrnXtdNupQRtp0M8bLyArLPJtZcEYBXggHtVu6+KXwcvLryr74d6zqSifzIdrWOm7ARjYxgjOU749a+eYLmBYS6abbynPllppHfJwTnGQO1S6Sc2Ulw2WdQxyee2B/MVn/Z9OM/adW/P/ADJ9u5dOhoauxbVjPjBa1jbA7bvmx+teg/Dfx59j0GXwVrNxHFpTP9sikVCZ96kMIYgOCzsFwW6YOOox5vqpP21lBziOJPyWqwZlud6sV2kAEHHNdOLwkMTT9nP1Xk+jOS9mfUM3ha08Walq+j3Uc0nk28ZtFWZzaEyB2illk53yoHLbRwCeh618167Y3GmJdaZdrtuLaZ4JFyDhkbB5HHatnRvHPirw5Bc2Oi6zcWkVxt3bcMRgY+QnO3jA49B6Vz92xfTssSxMjZJOSfrXDleAr4Sc1OScHa2/bV+V/n6jk00dB4Y1e/sH1K1s5ZEW7tcTGMkHakqvnI+lfV/wh8V3viLwe97q8QmuYbgwNKRtWf5QdxA7jOCB14r5W+GtzBD8VtE+0hGglma3lWQZUq6MpB9ua+1fAPh3Q9O8GW+m2cbJawyySJiTn523Ebu47DvgCuDiLDfWKLpwS59Gm+nf8DuwsJSjdM9T028a98FXMpRY/wBzImF6cKRxXnXxHt7qT4D6z9hYC6h0RZosjIJjiVyCO4IUg+xNekwiKLRZYI0VIxEQEXoBisC+tYbzSX02UboZ7LyGX1Vo9pH5GsoRcIQjUfM0kn59ztUbxcT4V0/xXo3w+1q21Hw34esdQvjHFemTVlaX7CHQOIIRkYZQ3Mhy3TGMEn7B1S5a9PhXUTE0RaGa4MbdU32rcH3BbFcJpfwe8Barr1v4uv7Oaa7+UG084G2d4wFVimOSAo4zg45Feha66iXTWDZ+SQA/VK+PzbM6GMVOVOL50nzN97bfLU4IQcb3PmH9qHSwIfD2tKPviW0f04Idf5tXlXhLxDr2kW1xDpGs/YYkZZZMzLGoOxRnlT6Yr6L/AGgNHTVvhFbyMSDa30UgI9GDIf8A0IV8yLpUtuI/KlKgBgQwyGz6jvivsuHWsRlkYS6Nr9f1JU3TqcyO3k8c+LLm2ktZfHdlskXayvqCAH24jq23xA8Yqpx8QrFAOoGpR8/+Q66DQfgh8RPEPwf08aZ4YtJBqQ+1W08sqQyTJvcEBCucYwc56EeorOg+CfxW8PaZBbX3gGfzIY2DSGS2kBDEFurnJ4HbueK66mCorS6fyR2wxVV62f4nJeJ/Feq674WubTVfFVpqJ48pTeo5XkZwNqnt/KsVbuVtHivHFhPEiAbbmHzXIGRwwIyOOgr1We5h8P3k9nqAtNPaJ9my80qMF/Q/d5TH8XTg1Omrafr+n/YZR4OvFbBMcMaQMD7FRmihVVFJcmm4sRTnVvyz97+vU8h8H+D5vGfjnT/DJ1D7N9sd1W5NvuVWVGfGBjJO3HXjNeq+HdJm+Hw17XoLo3F1Z6WdK0+SRCjC6uiYQyjJyVjEre3Bp2pXV1pPhG8eHS54poTgXMNzHFIvO3cpVAeM8UgsZ7XSfDPhmZrlpYoDrt+bmQySedcACFGP+zEAcf7ddtLEOu77JHNOj7FWe7Oy8PeBNJg8B2V9c324SKIIox8qxtnb8x6kjBOB14qafw54Zg0+5mmiuw0suy0jVCJWAX5dg53bsEkkflijwjqtrYXEdvctDC4uFYXFw+QitxsjQ8BiTlm7Bea6zQ7W7ne6vYsNYTP/AKFM8jSyNH/eweFBPIAxx2ra9yLWR5h4e8NXfiDx3YeFynkXF1crBIWI/dL1dj/uqGP4Vb8caxDd6Pr2saUzwR+Kr4aHpSEYaLSLMgMwPo7Kg49DXU21iNKt/FGtaNKLjUb+SPw1ojg5JvLviZ93cpHuyexaqOh6ZpXiH4tXk1kBL4d8JW0eg6UCAVlaPPmS4/2n3t+IpPcOhyGieHL7W822mxIVgjBZnbaq9gM+v+Bor1G4ePwxq08otnmtdRdrhmjA3xyjaCuO6kHI9CD60UDPii2gkFlJnClZUYFjgdD3PFXLFVSwnRM4MoQkn/az/Sr9n4P1F4XQxHa+Cc8YwasX2itoUdn57Mwmm3uSMDCrn+tdG7OdaIyNRZZNWm9FcA/gKoMwaYZ7mpQ7TtPIxwWIbJ981FIQZkUH5hjitUZF1lBv44wOTj8KSdwLaePPKykj6EZoE0bakkm7KopJPSoZCZIHmHQkL069aANXw/cfZvF2lXK/8s7uJs/8DFfePgWTd4ceHvFMyfTBr4DsnaO6tHXlvNQgeuCDX3N4I1mCG/vdMJKPcy+ZE5XKqDjIJ7H+tePmi+Fnp5fsz1mCRknu4STte1WRfwG0/wDsv51WikJaxbqHhQ/pUX2mG7El/BLIkFvE0WWG1XJwMDPUg+lR6FK17pOkSgE7bUkkDj5cg/yry5b2O9LQ4Pwzd/8AEnijHUXcij8JCP6VYv53Gn6XE5PmQzS25/DcB+mK5rwVqE0zywtazFLeaaX5dv74l2KhSenUdateJdVXTL7SLa6mQ3j3BmngV9+zcCAo9eB27nFfnlSj+8lGPdnnszviRY3Or+Bp9Dsbc3N3PJBHDAuMvIZVCjn3PetLwV+yTpcaw3/j/Wbed8gtpGmTBU91knPOPXYPoa5mbWrrxD4hsbBNOEEN7fWsiSXEgCFA6sc8rwR/tD617m/hxZA0tvoOmzoWJzFaM46+sc7H8hX2+RwrYPDOnUjZtt/gjaFDmd5HQ6+PEY1K007TPCt3daU8Kwfa9N1OKCW1UOAFKyn7gUA/KST046V418RPF0XgnxXeLY+N4dZtUR4/7O+yQKtvLjCia42EHBySqguemB1ru71v7KtJZWtr2ydI3INrqE0BB2n+CdcfkfpzXwN491S9n1+LyWubdY0KiNojhTnJKjORnPJPXr7V7WHpxrzs0OtJ0Y3Rq+L/ABHL4o8WHXL60soLwWohk+zxkoCM5ZNxyitnoTxziuWtNIm1G9itxNp1hDK5LXd0rYUnpkqpYL9BWOb+8UfNcqw64kiZf6VK2s3a2spWNd+P9arBgP8ACvajT5I8sTypT53dmj4w8OQ+F5reM+J9F1qaeLfnR7iSXyc9FZmAAb2r7S+DfhKwuLFvHviHSdfgu9Vs4Y3OsPFFufy0VmhUHzNuEAXOCAT1rzv9lvw74Rg8FjxtqHgvV/EGuyXcsS3jWJnhtgh4EQI27u5bk5OOMGvofVPFfh6/trlNf8La5HHKgjke4092AQHOMkELyM8d+a+FzzO5vmwUE9NJS797L+r/AIm1KFlzGRd22n6XDsbwVcaxMSwknXdcRJzyHVVPTOAAO3OK53UrxJNCuYLPSrXSrKJWaWNdCmtUQdSfMYce54q3Z2Hwyn8ZWOuaJ4uutJezkM32DcEWTGSykt82Dz1zXI+OfHuqeNEubCHda6KQwjtQ7JJdr0y+0FgpGflxk+1fMQ5qbXspvz3Vvzv95ukznNf1WHw1oEUti0Zj8MabvtvKI2vq+ojKsCCcmKAj6YFM+DclvY+HbrQmYC4VhOMnlxtAY/gf51uaF4IGpeA7TSNZ+G2rXFql8+owPpWoLBJuZQqsyTYD4UAKM4A6YrRb4L3MSf2jo7+LdFdQf+QnpJkC5BBG+AsMYzX6fhcTTq042ld2XqS6co6taDtKh0/xlcXd1PEJ9PspTawKSQJHwC0hx+AX2ye9FYmgfDzxmjT/APCFeNPDl2h4lFpqqRnI4+ZGGQR055HSiuj5iPPbPSHkQ5jYcjjFUvGvgbxB4h8N21ro1naXE0UrSuhmETBduBjdjJ9a9Gs9DkUCGZXLnjCHP+Fdto/hOeKy+2tZSIgOC2wn9e1d/Q47dD5O0v4b3Woa9qPhq6aKwvra0tLiZph5oRyDvXKn/bHQ44rqLT4BrLOiSeKAWOBiG0H/ALM1ez/DrwZZ+Iv2svHNhdXvmRQaVazbo+N+4oMfhX0hpPw78JaeqxDT1kQnkyjd+tefWxnJLlSOqlhuZXZ8g2n7Geu6jpv2yy8UBc9FubLb/J65jxH+yR8S9KVfscmlaqinO2CYxtj/AHT/ACzX6IXujeRovl6BqE9sEUbUceZF+R5rz261jxdpEz/2p4btdVgHPn6VKN+PeJuT+dc9bF1YP3Wma0sPTktUfnfqHhk6V8eH0C4gnWCHUgpV4thUHDYIHAGcD6Cva4fEetaZP5kNzHjrhoga+kG8ceFdWje1v47WzkIIeHVI9jkfQrj9a888QaN4M12dofDugM1yWwZ7NykQ/Pg1zyxcajSqwen9eRvHDyp3dOW5gwfGeO40Y6Z4j8O+cBjFxZuAcj1R/wChqpo3jLw4vwley1DXru31bFxGkC+aSELs0QGBgdR0I96vzfA/WLi1M1pfQK2MlZlKgf8AAh/hXGa18M/FWiRtLd6RK0Q/5aQkOP05o/2Weiev9dw/fx1aOQ0vxX4u0eVWstUeHH8DAOG+oNaHij4k6rrOhKddtIENrJHO91Zhkcqjgn5c9SMjqKoSWDByrAoQeVPb8KwvEixp4T1Ib/mNu+0MpGeO1VLLcJOSm6av3St+RyO9j2/QPGWi3vg60l0y3RhC+Y/tEeSluzZVSM5BGeOvDCt0XvheebesaW8o7xO0J/8AHSK8K8G3KWtnpqSMBDLaxrIpHbZ/k/gK7LULK+tLp4j5jHAMefun3BP5/Sub+z4QlypnpU8VLkTtseyaTc3eowXVnpniHWUiSErKsNy84Ab5dpU5Izzz7V4D40+CVhqGvIdK1tLJtu0x31vK4Zs9Q2Bt9MdK63wd4l1nTtNuLXTjcRzSTbpgqKwfAwMhgenPfvXY2XijxSswlmtQ5U5DPaEHP/bNhRTxEcLJxdOd11Vmn8r/AKFTovEJNTjZ9HdP8v1PBn/Zc+KMi79HttN1WMjINpe7GP8AwFjXG+IPgp8TNAuJLPWPCV7b3CqrEStGcBj8pzwQDg4PevurRvipqduYxdaZpDFRt5862Yn1JZSM/jXz98RvGXinxf8AGDU723F7a2n2gWqSMgaN40ARcjHKggnOM8k1208y9qmqXxeaaOOpgPZ61Fp5NM1fg7Bpfhj4QabpOu6pollqQknmlgvb+8tnj3SHA3J+76YOB685JNek2sizv5uj6n5oYgbtJ8Whz+CTD+tcVLe6B4QvbnR/GWvzRtB5VvGsWm+cXuGDeYmMj5QwXDZG4HtisqKPQ5lmk1XSdGkYt8rRWxiIA9SSf6V8tjcklVqSrOWsm336+qBU47RZ5r4++IPxAaZ49S+IcQlF1cwT6QbO3kls/Lk2qGk2neSOcj+tcNB8StRjtXspr+61FGGJFnt4wD+K4JB6Yz0/KqPxAjhXxvrsFuu2Fb92jUHI2sqkCuR09o4r+KMjiSRVz6fMK+vpZfhlSj+6jsuiPPlKSk1c/V/w9rOq6l8CvDus+XDZ3s+mwvJG8AUowQAjjoOOBivMtV1f4yXlmbvRbnU57ZiwzZXqx7AGK5KnacZ6EVe0P4m+HdI+DunaLKWleCNo0kt3RlPzMcckevvVHwBqUWveENdkjE8ax3b4IbadrKpHQkY618lmtedKmqkNEevUvTp6b3PMG+EUWuapdX3iTVLDTbyaQyyfapIGZmPXJL5znJorA8dQzReIGj+2ySLkkCZEcj8dtFcdHHY2cFJVrf8Abq/yPP5pdz6K0nwZBYtazyyHluh713WrvCvhW4hhYFgRx+FYmj6ajNbrdNPNlv42wR+IroNeRLPw7diGONU6EA5PSv0WUm2ZqNkfJmgalqGiftV+MLzTpXjkNhb5x0IyvB9q+kvBnjqLVr6GPUbloJRwUbGHP1r5Uh1ZIP2pvE0Uj4kurOFUXH3toDEe3ANek6fez219FIIwQGBAP1rmr0VOV+ptRquMbH13qt2E0Z3jZVO0ckcV5dq3jHR7Cbypv3twTwIV4/H0rldW8WazBoy209xm2cdGJ3KPTNSeHNQ8HmLzZL22hkPLGWVBz75NefjYu6bOvDNWsXbrR4/GaiS8uLb7P/zyWMM35npVdvhhYWSrN4e1jUNNuQOqSb0z7qat3nib4d2TvM/ibR7NyMeYNQjBH4BqwLn43+BtIYx3HjTQ76IH76yDdj8AQa81OttFM7G4dWjSWT4g6KhF1BZ63Cg+9AfKlI+mMGmf8J9otwfsuq29xpco4MN5HgE/72MGsK5/aK+EiR7v+Ewsyw/gjRiw/IVzOpftCfC+/jaJYtV1MYxiDSnkLfTIo+rzlvTf5B7WMdpHc6nonhDX7MubS2mbG4Oig5/EV4x8VvAukad8LvEGpWEjReTZyMIycg9Bxn60y4+IehXNx5vhrwH49WTOQ0Gnsin8Ca5PxL461fxlZ634Zt9D12OZYFtL1rshFtN5xmdQCVXO05xkYJ6HFdWGoVYSVnZLuY1qtOUXpdlnwj4QuyvhmaRYpraVLYuoPO1lXOR9DXW6PcWWpeCIbyDTbW8CPJbSNK7BwASEJwR/CrL9UrY8CX+lTeF9Cs55VXUbaKG1mTbjbLGApX9PxGD3rzL4Q63EfFereGL5v9HuJ5IlJwdu+Ysn4bxg+0hqp1Z1JSb6f8EqlCMIq3X/AIB0seoafp1+tzp+nsLlxiVHuCsfHQnI5/nXR6R4lu5YZGW3jLByD5WTg+mT/QVl+IPCptp4tyXMMDPnyzBnb7A84HNZ6m4sIhJDdyrEwBK7Su7ryB+FdS5KkE4MxfNCTUkeif23e3qeWYopl7pNCcj8cYPrWBDo0lx4sYvaEQXEqiVlbaNp64544zVywuLu5s0nkv55FKgbuEHHcf5NJJdXlvt8q9f5sKX8sbz757e/rXAsS07I63Q01Mbx94FtvGPiCe/lF+3kXBeNWuNh4OASehOAOvX1rnLLwpb6Nqfkzx3UiqOWkbOK6rULclwbi8vJXY9dzYH1XjFY81vM7L5k8kiE7VZUwR+J4/HNbQrXvzSMZ0F0icbr3h3wrqF7I9/aicscgnhx6ZI7Vj2/w58JSzpLb6QRg5Dec3BHtmu7utJggkVLm7tbeYEMVuZVBPvnNRvPodkhMuqaXD2YNdRkEfQmtXiYrSMn95Cw76xRal8NQDRIbWAuqhflVZSV/I103w9v9R8GaTqttbWsN3b3eHeKRmR1YDGVYZ7diPxrirzxz4WsYsL4h0rpj5GZ+PfAOay5fjP4VitPJ895mxj93C/9cVz16DxNN03G6fkROMPtfmW/GE+raprLXUOjsgY4w86gfmQKK5e4+L2mEhrePUSp9YQQPzNFRTyqEIqKh+LMeWl3/I+09K1eSe+tjbQFQrfekP8AOtnX/NutMnjmlB/2V4HSuUhv4re4twv7qPzSDngCta/v0MUwDFyy8DPH19vrX0RyHxF8VdOurP4uajqfhq7Ivo1WWcQzDejElQAM8EYUn6k10mkeFZ9X0+G6vfiT4icuoLJGBHg9+ue9ZPxMgTTPixcyWmmTpc39xHJLdhSY54ipD5I+6ysBjjmt/wANXU9taLDuYIedhHH/ANas8RUlFe4tQpRTfvPQ6S8+EXhcacr3HiTxXeSMuSZb0Bf0T+tc7L8M/A1ud89pe3J9Zb1yD+RFdNca7ceQqCIuOmB1rDub+4nn+eNiuCNmP1qPaSaNVCNza8N+FPg/HOLfVPAdiWPSaZ5ZPzy9esaT8PvhgIUm07wV4d29crYoxP4kGvCHu7pj8trhe/Xn8zWzo3jHxRoqBdOMOzssuWUV5eJoVZ6xk/S520asI6Nfge/x+CPCs7rHY6HY2E6jJlt7ZEA9uFqC6ttQ0glYPKvIF4+QFSK4PSfF3xG1mMeV4o0WxHotq0jD8Cavto/jnWJv3/xFmDn+G2sY4h+vevLlBxdpyX4/5HdGSesV+R0aaza3D+XI5hfGCr9jXLeIvAOia7PNqD6TG9y64F/bDy514wDuUgnHvn0om+G895Ko1Xxr4gvMnorqgP4gcUz/AIVlYW5OL7VriMHG1758/TjFKPLB3jP8P+GG05aOJ4joT6v4T/aRTw8QzrfT273C3OWCoqhVkiLAcHpgZIPHIFeb6Zqg0X4jNqJk8uIXTpI2fuqXPP4HB/Cvq+w8CeHbTxJZXn2INPHMrRySSvIdwPX5jxivlHSbeO8+JmnWd3G3kXOpxxyeYh2lGlAOcjGMGvUpV41ZOSXRX/E5JUnTik310O+8bftDeKYPEuo6PHZ6f5KybHxghjwSRxxk81xv/C7fGzNIIX06IScYa3EmO3U16H4Pg8P3PhXxh4cmsbGTV/Ds14I5nt0aa5t8uqFmIySjArnOcbK8HltVS1V5jtOQoAPJ+XNdNBUbuCha1vn5mFV1bKfNudDcfFDxrcB9utrAd5YC3jCY+gxiqUnjjxvcKpk8S6gEJxuMm0fTFYMEKC43c7Acbn9elTt5EUMpubtXBbKoWB2/SuuUILaK+45lUn1f4ly58QeKJpdx8Q6jPk5LG5f/ABqk81/LGzz315LI2cq0rEZ/PmqR1ohQqWowB/ExNTWWswm9X+0ICLfnJh5YHt1qvZzS+EXtIN6svI8ACkWW5lGA7cn86GmJIIgUYrPm1RZpgljI+CSQJUUfhnJ5qmdQuy7B7iReOBtAwalYeT3/AFG68Vsa8kspORHGB6daYjz5O3y/X7gNbXh3xTpLwi31WysoplHE/lqFf68cGuhutQ06XSZ2tJLcqYnGYtvPB9KiSlF2aLTUldM4NJr5soZ02g5ChRkc0VFbo/lAqxAwO9FU0k+gk3Y//9k=", "tpv": "data:image/jpeg;base64,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", "web": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAQDAwMDAgQDAwMEBAQFBgoGBgUFBgwICQcKDgwPDg4MDQ0PERYTDxAVEQ0NExoTFRcYGRkZDxIbHRsYHRYYGRj/2wBDAQQEBAYFBgsGBgsYEA0QGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBj/wAARCABwAMYDASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAPwDwOIc+9aNvWfDWlbCv2WB6iRqW68g1s2o6YrJtx0rWtj0roiapGrCvArUtV5BrLgOQK1bU9KplGxbAYFaUXbFZlueBWlEehrKYmy/D2q6vAqhEatqTisJEtk+eKt2OmXmotKtpEGEUZlkZmCqijuSTUNrZ3F3IEgiaRieAoyTXeaOuj6NpTWZ1SxTU5H2yrcblVj/zyyRgjGc+teBnmcRy6jeNnN7L836Im5xUuj6nFH5hs3eP+/FiRfzXNUTlWIPBHX2rpLjwlFJO0nh1ZrDUNxL2ZuTCMesTjII/2Tx79qwr/UPEulyiPxPptoUYkI2pMscj47JKnU/XNfM4bjlxdsXS07x/yf8AmaqnzfCyszDFV3J5FaGm/YPEUrQaSssN2MkWsrhxJjsjjhj7Gs2cMjFSMEdQa+1y3NMNmEPaYeV117r1RDTi7MqytzmqNw3FWZm7VSlOa9aKGUJ8EGsq4AGa1JzyayblutbIoy7hRk4rOnHymtGc81nTHtQyTJuF54rNnFa04HJrLnGSc1jIhozn+9RT3Az0orJkWK8PNalv2rMhHIrSg4xUQkbqJrW56VqW/NZNuR1rUt26YrqjItRNeDtWnbnkGsmFuBzWhbvyBVl8ptQyEYrSik4HNZELcCrsL9KmRDRsRSHHFdH4Y0G88SastnaFUVcNLK3SNfX3PtXL2UctzcRwQRtLLIwVEQZLEngCveNB0FvDnhAWkagXkg33UgOfmI+6D6Dp+dfMcRZv/Z9D93/Elt5d38vzMp6aGtp0Gi+G9K26YAVj/wBbcEZkYjqSe30rU1G20zxFo02j61bQ31ncJteKYbldT39j6EciuB8T3w0zwHqWpq2wRWb7we/GAfqCRW/pF+0/huwuM/MIlz+Qr8oqVp1puVR3b6sycLK5w978LPE3hVy/gjXZLzT1O5dK1WYkx+0U3JX8ePUGrEUs/iXRP7O8XaHDFOJZFeHUkxHGUA2yA8xs3IIJIzzjpXqdteLPCMms+50nT73Ubm0vbWG4trqIO0UqBkYj5TkHg8FaxlT7FKq+pwPh1tEK2zTGzF+LtZD9ijVbeHAA8oSDAbnD8dMgV554gufP8RX0wC4adz8nT7x6V7DceAPBulX8FwPDOmfYzciUgwgiCY4USAHgAnAz24/DG+Jvg7TotCl13S7VbaeBg1xHGMK6k4LAdiCRnFfU8IY6nhMTKnV+3ZJ+fn63G5pu545K/eqUsnBNSTyYzVGWQkcV+tRNUiGd6zJzyas3ElZ8rnrVlqJUnIINZ03U1dmbGazpmPWpbDlKU/cGsy4q/O1Zsx61jORDgU2+8aKR/vUVi5C5CKEHjJrQhzWfEcEVehYk1lGR1qmacBAArTgIGDWRCeRWlC/y10wkUqZrwN0xWhA3zVkwPgVehk55rdSHyG3DJx1q/btucD1rEjlxjmtjSYbi9v4rW1jaSaRgqIvUk8AUpySV2RKnZXPUfCsK+EbpNYvNOu729aDfbxQQs4gDD/WMcYzjoPfJr0TQPFOj69pU0seoKvGHM2FKE8c9utM0/wAP3tu+Y9WllvIsKGkaRoICBjaqZCt9SfoK4Lxpp95oPigXGpNbLHrKy23nWyECRmTDRSDH3uQ6OecBlJOAa/CMyzGrja8sRV66LyXQ4kozdupj/FrxG1t4KXw++UvL/UFtDCPvEKwyo9dzMg+hr0TRbzbpIgU8J8ox7cV8v2mt6j4l+LWmtKr39toEarcTOclJ3HDe+0YXPqPavo/w5AZLNXhlDBjgr6Vw0pczuaTjZWOs0uafl3OEou9d+z67pqdRJLJDn0zGWH6oKJmFpbpAuPNY4xTjp1s1uizKryhw4Y9j7fgTW0vIw06m41zDc2jxXCBo3UqynuCORWUmNX8OXel3T+ZIoksnZudxxhWP1BU/WryxqYuvFZsMMltfztGRtlbJHo3GD+RI/AUKbhJSjuiUkfM96GjuJEfhkYqw9CDg1mzPjvXe/ErQP7M8STXsaMsV4TcAEY2sT8w/76zXnM0mOM1+7YHFxxVCFaG0kmd1OPMrkErZPNU5XAFOml5PNUpJPeuts3VMimbg1nzNViV+DzVGV8k1lKQchVmbrzWfKQSatTvyaouTnrXPOQuQhYc0UjHmisXIXsytG3TNXoSDWdGauQntWUZHWoGnE2DV6B/es2JuKuQthq6YzLVM14JM8Zq5HLg1kxSYq3HJmtozH7I14pfeuq8DXLJ4+0fFwIM3cYMrHAQbupriYpfetfRr2K21m2uJwxjjkV2C9eDms8WvaUZwXVNfgTOleLPsG0v7fy0jTVNRZzgoL5CDL/tDcMKp9ABXFfFbUtNi8IyvqmnmO9ilRrIM3DSg5DDHXAJP0yDWSdd8C6HLbp4y+IVrbajOiyi3n1d4PLDDICxow2DngnmuU+K2qq5s9It9YbVrPK3lvcPIsxEbJgL5g++OW5POMZr8cyfBrFYynRmrq936Lv8Al8zxqFPmqJGP8OtIj8I/FS+1BrdZtP1HPnqy/KVc7gf1r6KtNE0PTrN9W0kt5UnOxnyifQV5/wCAbK21fw5Z3NxbhopLOOKY46MpKg/jj8wa7u10l9EimjmkW40qZfmWU4C+nP8AUV5bpulVnT/lbX3OwVn71jOjddR1JZ5mUQCQBQer4OcD/PTNbzwRRPuVQA3I2kiuf/4RrWWuxqNjc293ERiOOKTKxj0Uf16mur02yukgD6gm1sfdPamjKTRXuFZLYOkrD2bms+9eYRgGEEsFJV5AgIzyS3YYzWvPtuL1Yo/uryay/FEWm3GmLaX6B4WZVZQu7cNw+UjuOnFEloKL1PLfi7rumapplidO1e1vBAzROIgQDnkMp6MvykZBrxS4cV9R+M/D+keKvCEmmo5k1C2jL2UClVeBtvA2ZzggYI/EDivlnUYZbaVopkKOvVT1FfqHB2NjUwXsb+9Bv7m7o9LCWkrIoTSc1Ukc9aWWTk5qB3yK+sczvVMhkkzVOVuamkOM1TkbJrKUwdMrzc8iqj5Aq3IRiqkhGMVzykS6RCTzRTe9FYuQezKyDpVqPNRKvtViIYOMVzqep6EaJah6VcjGcVVhXmrsfFbRqGioFmMYFWoqqRk4q3ER3rVVTRYcsocHitCzhmuJljgjZ3JwFUZJNUIxk17N8I7bTtM0q88T3ccbTxSCC2Mg4U4yzfXHf614vEXEFPJcBUxtVXUdl3b0S/rocuPmsJRdVow7D4Aalrurf8JDrWi2ttc3BBaS4Yl2OANzRhhgYHJ6+xruL74LSLZItprdmzRRiNIhE0aKB0A64FdZJ4zguYsw3Sbm6EYJx9PpUP8AwkgWZTI52k4Jr+dJeI+YQxDr4dQhfoorb53evqfFTzOo5cysvRGX4fHivRvClv4etrT7JJZiczuwD+aXY+VsI+9kk/TFWLHwd4ultx/aXiG9KyMzzROBMsm7qpUkYXHYc1L4v1bxBa+BtQu/DUqx36xZVtoJC5BYrnocZxXyreSa9c64bzVtf1aeQncIrid9ufXr09ulfQ5Vm7zWE8XNWk5O9trvXQ7sNJ4mLmtNT6YuvDvi7wTMt74W1S9nthy1lM+R9BnqPrz71BJ8XPGcZT+1PDiW1srATTPIV2L647/hXz7p3jr4h+HNQZtL1+/NtnIgkYTRkehV8/pXoGifHlNQh+xeNvCDmNvla5sgp/Exk/yNerfszqdB/aVz2C08fT6reJYeHIvtTyx+a10crHCM4+YnqeOgrK8fal4ii0VHgv4NNcSoiXdxkeY3U7VAJGQD161Q0+68H+KbCDT9B8VRwxq4kWxY+U4OckBWwR+FcX8Q777PL/wiMfmSRafOzNPNI0kjsV6MT6ZP5969HK8BLMK6o9OrXRf8ObYPCe2qqCVu/oes+CPE2lamjaNokjWkdumbx7tQZi5GSeSOTySzdOOK8f8AisdHuPFst/oGq2GqWMoANzYzJKolH31baSAw44981xV5JLeeHtT0aS4nhi1CAQTTW7bJCoION3cHABHcVlabptnoeippenRGOBSWOTku3qa+tyTJsVl2M5m04Wav37ad/wAPM9OjlFSlX5vskcv3qiY8VLNyarE9a+zdU9H6sRSHOapyDmrUmcVWes3VJeHZVkHy1WccdKuSDiq7rxWUqhm8OyqVweKKeynPSisvaB9XYqxEjpU8cJz0rbGkv/cNTR6RIT9w1xe0Po45a+xkRRN2q1HE2elbEekSZ+4atJo8n9w1aqmyy19jIjhOeRVuOE+lbEejyY+5VqPSZAOUNWqpay/yMeOIgjiu/wBBuyPhpLYguNmo722tjhouM+2VNYCaUxIwpq9Dp1wIWhDOI2IJUHgkdM/mfzr5/inJ5Z5l08FGSi2003to0/yucGbZI8bhpUYuz0s/mN0uzure5/tCLUxh2CCJmwWPoF6n8K9Y0TS9SvrQLc25to2H3rj5T+C/e/PFcZ4bvJtBuy6W0Th+GfYBIB7N1x7dK7P/AIS+yii8zbcSPj/VJGck/U8D65r8Cz7gjNMDiFTVJ1U9pRTa+aWqfr8j82zHhnHYSooKDmns4pv/AIb5na2Gk20VoEu7kXAVfmLjYmPcen1Jrx3x14b8KRTS3Hh3W9Nk2kmTThMH2+uw9D/u5z6Ua7q+t+ISY7pzBZg/LaRMdn/Aj/Gfrx6CsX+yT02ke1fpXBfBWOyy2IxFbk5t6aSkmu0tbX9Nu+6Pqck4XxOHtVqz5W942v8Af0+77zlZNKs5fvW+3/cYiov+EfsW6rMB7P8A/WrsxpP+zTv7KPp+lfo8sqwM3d0l91vyPqnlVB7wX3HFf8I9pqMH+zu5U5G+Q/0xV+8kuLudp7iRpJWOWZjkmukbSif4aibSc9jXTh8Nh8N/Bgo37GtPLqdP4IpHJNEe4qvJCcHiusk0luy1Ul0pwOFrodU1+o3ORlgJPSqrwMK6+TSGxnafyqq+kueiGpdUP7O8jk2hYjoagaA+ldY+jy/88z+VVpNIm/55modUTyx9jlHiOTxUDwtXTvpEuT8h/KoH0mUH7hqHVIeWS7HNeS2eRRXQnSpO8Z/Kip9oH9ly7HqMegWxx8oq5F4ft/7i0yG796upd+9edeR9TJPoImg24P3B+VWE0O34+VaFvfQ1OLzAHNHMznmqg3+xYB2Wl/smBB90VILsE/eqZbtcc4o55GLUyi1nCh/1f6U0+ShyY/0rUFyhHY0GWJuGVTT9pLuTzd0YNxqunW4zLLHHj+8azpfF2iRkgXsBI7A11T22nSn95bRN9VFVJ9A0KY/Np1sf+ACk6su4rQZzL+NLHH7sq/0U1Rn8cMhJSzd/+AmuuXwzoKn5bGJfoKe3h3SQPlgQChVZD5YHBH4gXytldKkP/ATUR+IesFsJopx9DXoKaDpmf9StPGi6an/LulV7SXcXJHv+Bwdv401u4bnSAorXt9e1CUAyWKr+NdSun6cvSBB+FSi1tFHyxL+VP2rLjyrcw4LySb/WQbauLHE3JStDbbqOEUfhTS8Y6AU/as0TXRFYWcDrjbinLpUB/hFWVnT2pGnA6Gl7SQry6Fc6TAewqGTRrduwq09zgdagN170c7Lj7TuU30K3bsKgk0K3xgAVoG5yODUT3PHWjmZtFzMp9EhVsECirck5J4opc0joUnY//9k=", "hero": "data:image/jpeg;base64,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"};
+const ART={
+cv:`<svg viewBox="0 0 120 110" class="art"><path d="M40 14c4 9 12 14 20 14s16-5 20-14l22 10 14 34-16 7-6-14v55H26V51l-6 14-16-7 14-34z" fill="currentColor" opacity=".9"/><path d="M44 14c3 13 30 13 32 0" fill="none" stroke="#0e0e11" stroke-width="3" opacity=".5"/><rect x="42" y="74" width="36" height="14" rx="4" fill="#0e0e11" opacity=".35"/><path d="M60 28v20M55 46l5 5 5-5" stroke="#0e0e11" stroke-width="3" fill="none" opacity=".5"/></svg>`,
+tpv:`<svg viewBox="0 0 120 110" class="art"><path d="M10 40l10-26h80l10 26z" fill="currentColor"/><path d="M10 40h100v8a12 12 0 0 1-25 0 12 12 0 0 1-25 0 12 12 0 0 1-25 0 12 12 0 0 1-25 0z" fill="currentColor" opacity=".7"/><rect x="16" y="56" width="88" height="48" rx="4" fill="currentColor" opacity=".9"/><rect x="26" y="66" width="30" height="38" rx="3" fill="#0e0e11" opacity=".3"/><rect x="64" y="66" width="32" height="22" rx="3" fill="#0e0e11" opacity=".3"/><text x="80" y="81" text-anchor="middle" font-family="Unbounded,sans-serif" font-weight="900" font-size="9" fill="#fff">OPEN</text></svg>`,
+web:`<svg viewBox="0 0 120 110" class="art"><rect x="14" y="16" width="92" height="62" rx="6" fill="currentColor"/><rect x="21" y="23" width="78" height="48" rx="3" fill="#0e0e11" opacity=".35"/><text x="60" y="52" text-anchor="middle" font-family="Unbounded,sans-serif" font-weight="900" font-size="13" fill="#fff">DROP 01</text><path d="M4 84h112l-8 10H12z" fill="currentColor" opacity=".8"/><circle cx="92" cy="32" r="9" fill="#c6ff3d"/><path d="M88 32l3 3 5-6" stroke="#0e0e11" stroke-width="2.5" fill="none"/></svg>`
+};
+
+const META={
+ cv:{goal:"Montar el circuito básico de cualquier marca: <b>comprar → almacenar → vender → facturar → cobrar</b> y comprobar si ganas dinero.",why:"Es lo que pasa cada día en cualquier tienda o marca. Entenderlo te sirve en las prácticas y si algún día emprendes.",learn:["Qué es un ERP y cómo se conectan sus partes","Calcular precios con IVA y márgenes","Detectar errores en facturas"]},
+ tpv:{goal:"Llevar una tienda física durante un día: <b>abrir la caja, vender, facturar, devolver y cerrar</b>.",why:"El TPV (la caja registradora digital) es la herramienta que usarás en casi cualquier tienda en la que trabajes.",learn:["Usar un TPV real","Aplicar promociones sin perder margen","Cuadrar la caja al céntimo"]},
+ web:{goal:"Crear y mejorar tu <b>tienda online</b> para lanzar una colección limitada (un drop).",why:"Es marketing digital en estado puro: web, SEO, ficha de producto, venta cruzada y contenidos.",learn:["Editar una web sin programar","SEO básico para salir en Google","Estrategias para que cada cliente gaste más"]}
+};
+const EXTRA={
+ cv:[["Canva (o papel) + Odoo › Ajustes","El logo es la cara de tu marca: aparecerá en presupuestos, facturas y en la web. Una marca sin logo no se recuerda."],
+  ["Compras (o Inventario)","Sin dar de alta el producto no se puede comprar ni vender nada. Aquí decides el precio y el coste, es decir, tu margen."],
+  ["Compras","El pedido de compra deja por escrito qué pides, cuánto y a qué precio. Así nadie discute luego lo pactado."],
+  ["Inventario","Registrar lo que entra en el almacén hace que Odoo sepa cuántas unidades tienes para vender."],
+  ["Contabilidad (o Facturación)","Revisar las facturas de los proveedores evita pagar de más. Un error pequeño repetido muchas veces se come el beneficio."],
+  ["Ventas","El presupuesto es la propuesta formal al cliente. Cuando lo acepta, se convierte en pedido y arranca todo lo demás."],
+  ["Inventario","Validar la entrega descuenta las unidades del stock: así nunca vendes algo que ya no tienes."],
+  ["Ventas (o Contabilidad)","Sin factura no hay cobro legal, y además Hacienda la exige."],
+  ["Contabilidad (o Facturación)","Registrar el cobro te dice quién ha pagado y quién no. Es la base para controlar el dinero."],
+  ["Contabilidad","La cuenta de pérdidas y ganancias responde a la gran pregunta: ¿la marca gana o pierde dinero?"]],
+ tpv:[["Punto de venta","Importar desde Excel ahorra horas: en lugar de crear los productos uno a uno, los cargas todos de golpe."],
+  ["Punto de venta","Saber con cuánto dinero abres la caja es la única forma de comprobar al final que no falta nada."],
+  ["Punto de venta (pantalla de caja)","Cobrar bien una promoción es clave: si te equivocas, regalas margen o enfadas al cliente."],
+  ["Punto de venta (pantalla de caja)","Cada euro que sale de la caja tiene que quedar registrado. Si no, al cerrar no cuadra."],
+  ["Punto de venta (pantalla de caja)","Algunos clientes (empresas, autónomos) necesitan factura completa. Saber hacerla también es atención al cliente."],
+  ["Punto de venta (pantalla de caja)","Una buena devolución convierte un problema en un cliente que vuelve."],
+  ["Punto de venta (pantalla de caja)","El arqueo comprueba que el dinero real coincide con lo que dice el sistema."],
+  ["Punto de venta › Informes","Los datos de ventas te dicen qué funciona. Sin datos, decides a ciegas."]],
+ web:[["Sitio web","La home es tu escaparate digital: en 3 segundos el visitante decide si se queda o se va."],
+  ["Sitio web (o Comercio electrónico)","Una buena ficha de producto vende sola: buena foto, precio claro y una descripción con personalidad."],
+  ["Sitio web","El SEO hace que te encuentren en Google sin pagar anuncios."],
+  ["Sitio web › Configuración","Con variantes, una sola ficha sirve para todas las tallas y colores, y cada combinación lleva su propio stock."],
+  ["La web, como si fueras cliente","Comprar en tu propia web te enseña los fallos antes que a tus clientes."],
+  ["Sitio web › Productos","Ofrecer un complemento sube el ticket medio: más ingresos con los mismos clientes."],
+  ["Sitio web","El blog da contenido para redes, mejora el SEO y cuenta la historia de la marca."]]
+};
+CASES[0].cards.unshift({t:"Diseña el logo de la marca",chat:[
+   {w:"Xiana · Comunidad y ventas",x:"Antes de nada: necesitamos <b>logo</b>. Va a salir en las etiquetas, en los presupuestos, en la web y en el perfil de Instagram."},
+   {me:1,x:"Me pongo con él en Canva. Algo que se lea bien incluso en pequeñito."},
+   {w:"Xiana · Comunidad y ventas",x:"¡Y súbelo también a Odoo, que quiero verlo en los presupuestos! 🔥"}],
+  task:"Diseña el logo de {M}, súbelo a esta app y ponlo en Odoo como logo de la empresa.",
+  check:{type:"list",needLogo:true,items:["Logo diseñado (en Canva, en otra app o a mano y fotografiado)","Se lee bien en pequeño, como foto de perfil de Instagram","Funciona también en blanco y negro","Encaja con el nombre de la marca y con su público","Logo subido en Odoo (Ajustes › Compañías › logo)"]},
+  sol:{path:["Ajustes","Compañías","Actualizar información","Logo"],steps:[
+   "Diseña el logo. En Canva, busca «logo» y parte de una plantilla en blanco o personalízala a fondo: <b>nada de copiar marcas que existan</b>.",
+   "Descárgalo en <b>PNG</b> y súbelo en esta app (botón «Subir logo»).",
+   "En Odoo: <b>Ajustes › Compañías › Actualizar información</b> y carga el logo. También puedes hacerlo desde <b>Configurar diseño del documento</b> cuando envíes el primer presupuesto."],
+   tip:"Un buen logo es <b>simple, legible y memorable</b>. Haz la prueba del pulgar: si tapándolo con el dedo en la pantalla del móvil todavía se reconoce, funciona."}});
+
+/* ================== ESTADO ================== */
+const KEY="droplab-v1";
+let S=load();
+function blank(){return{team:null,name:"",el:{},emoji:"🔥",logo:null,slogan:"",cards:{},startedAt:{},finishedAt:{},setupDone:{},teacher:[]}}
+function load(){try{const r=localStorage.getItem(KEY);if(r)return Object.assign(blank(),JSON.parse(r))}catch(e){}return blank()}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}if(ONLINE&&S.team)schedulePush()}
+/* ---- Modo conectado (Google Apps Script, cuenta del colegio) ---- */
+const GAS=(typeof google!=="undefined"&&google.script&&google.script.run)?google.script.run:null;
+let ONLINE=null,SYNC="",_pushT=null,_pushing=false,_again=false;
+function gas(fn,...a){return new Promise((res,rej)=>GAS.withSuccessHandler(res).withFailureHandler(rej)[fn](...a))}
+function summary(){const cur=view.caseId?view.caseId+(view.idx!=null?":"+(view.idx+1):""):"";return {n:S.name,t:S.team,e:S.emoji,s:totalStars(),m:totalMax(),c:CASES.map(c=>caseStars(c)),d:CASES.map(c=>caseProg(c)),dn:CASES.map(c=>c.cards.length),tm:Math.round(CASES.reduce((a,c)=>a+caseTime(c),0)/1000),cur}}
+function setSync(v){SYNC=v;const e=document.getElementById("syncp");if(e)e.innerHTML=syncLabel()}
+function syncLabel(){return SYNC==="ok"?"☁️ Guardado":SYNC==="saving"?"⏳ Guardando…":SYNC==="err"?"⚠️ Sin conexión: reintentando":"☁️"}
+function schedulePush(){clearTimeout(_pushT);setSync("saving");_pushT=setTimeout(pushNow,1500)}
+async function pushNow(){
+  if(_pushing){_again=true;return}_pushing=true;
+  try{let st=JSON.stringify(packState(true));if(st.length>45000)st=JSON.stringify(packState(false));
+    await gas("saveState",st,JSON.stringify(summary()));setSync("ok")}
+  catch(e){setSync("err");setTimeout(schedulePush,15000)}
+  _pushing=false;if(_again){_again=false;schedulePush()}
+}
+async function boot(){
+  if(!GAS){render();return}
+  $("#app").innerHTML=`<div class="panel" style="text-align:center;margin-top:40px"><div style="font-size:40px">☁️</div><h2>Conectando con tu cuenta del colegio…</h2><p style="color:var(--muted)">Un momento, estamos recuperando tu partida.</p></div>`;
+  try{const me=await gas("getMe");
+    if(me&&me.email){ONLINE=me;
+      const mine=S.owner===me.email;
+      if(me.state){try{const keepT=S.teacher;S=unpackState(me.state);S.teacher=keepT}catch(e){S=blank()}}
+      else if(!mine){const keepT=S.teacher;S=blank();S.teacher=keepT}
+      S.owner=me.email;try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}
+      if(!me.state&&S.team)schedulePush()
+      setSync(me.state?"ok":"")}
+  }catch(e){toast("No se pudo conectar: se guardará solo en este navegador")}
+  view={name:S.team?"home":"start"};render();
+}
+let view={name:S.team?"home":"start"};
+
+const cs=(c,i)=>S.cards[c+":"+i]||(S.cards[c+":"+i]={status:"open",stars:0,tries:0,bonus:0,checks:[]});
+const caseMax=c=>c.cards.length*2+c.cards.filter(k=>k.bonus).length;
+const caseStars=c=>c.cards.reduce((a,k,i)=>a+(S.cards[c.id+":"+i]?.stars||0)+(S.cards[c.id+":"+i]?.bonus||0),0);
+const caseDone=c=>c.cards.every((k,i)=>["done","peek"].includes(S.cards[c.id+":"+i]?.status));
+const caseProg=c=>c.cards.filter((k,i)=>["done","peek"].includes(S.cards[c.id+":"+i]?.status)).length;
+const totalStars=()=>CASES.reduce((a,c)=>a+caseStars(c),0);
+const totalMax=()=>CASES.reduce((a,c)=>a+caseMax(c),0);
+CASES.forEach(c=>c.cards.forEach((k,i)=>{const e=EXTRA[c.id][i];if(e){k.app=e[0];k.why=e[1]}}));
+const unlocked=c=>true;
+function openCase(id){const ix=CASES.findIndex(c=>c.id===id);const prev=CASES.slice(0,ix).filter(c=>!caseDone(c));
+ if(prev.length){modal(`<h3 style="margin-top:0">🧭 Te recomendamos ir en orden</h3><p>Todavía no has terminado <b>${prev.map(c=>c.title).join("</b> y <b>")}</b>. Las misiones siguen una historia y cada una aprovecha lo que hiciste en la anterior (productos, clientes, configuración de Odoo…).</p><p style="color:var(--muted)">Puedes entrar igualmente, pero algunas cartas te costarán más.</p><div class="actions"><button class="btn" onclick="closeModal();openCase('${prev[0].id}')">Ir a ${prev[0].title}</button><button class="btn ghost" onclick="closeModal();go('case',{caseId:'${id}'})">Entrar igualmente</button></div>`);return}
+ go("case",{caseId:id})}
+
+/* ================== UTILIDADES ================== */
+const $=s=>document.querySelector(s);
+const esc=s=>String(s).replace(/[&<>"]/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[m]));
+const slug=s=>String(s||"mi-marca").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"")||"mi-marca";
+const B=s=>String(s).replace(/\{M\}/g,esc(S.team||"tu marca")).replace(/\{S\}/g,slug(S.team));
+function parseNum(s){
+  s=String(s).trim().replace(/[€\s]/g,"").replace(/[−–]/g,"-");
+  if(!s)return NaN;
+  if(s.includes(",")){s=s.replace(/\./g,"").replace(",",".")}
+  else if(/^-?\d{1,3}(\.\d{3})+$/.test(s)){s=s.replace(/\./g,"")}
+  return parseFloat(s);
+}
+const norm=s=>String(s).toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/[«»"'.]/g,"").trim();
+const starStr=(n,m)=>"★".repeat(n)+"☆".repeat(Math.max(0,m-n));
+function toast(t){const e=$("#toast");e.textContent=t;e.classList.add("on");clearTimeout(e._t);e._t=setTimeout(()=>e.classList.remove("on"),2400)}
+function burst(x,y){for(let i=0;i<16;i++){const b=document.createElement("div");b.className="burst";b.textContent=["⭐","🔥","✨","💸"][i%4];b.style.left=x+"px";b.style.top=y+"px";b.style.setProperty("--dx",(Math.random()*300-150)+"px");b.style.setProperty("--dy",(Math.random()*-260-40)+"px");document.body.appendChild(b);setTimeout(()=>b.remove(),1200)}}
+function modal(html){$("#modalBody").innerHTML=html;$("#modal").classList.add("on")}
+var closeModal=function(){$("#modal").classList.remove("on")}
+$("#modal").addEventListener("click",e=>{if(e.target.id==="modal")closeModal()});
+function fmtTime(ms){const s=Math.max(0,Math.floor(ms/1000));const h=Math.floor(s/3600),m=Math.floor(s%3600/60),x=s%60;return(h?h+"h ":"")+String(m).padStart(2,"0")+":"+String(x).padStart(2,"0")}
+function caseTime(c){return (S.el[c.id]||0)*1000}
+function level(p){
+  if(p>=.9)return["👑","Icono de la escena","Nivel leyenda: gestionas la marca como si llevaras años en esto."];
+  if(p>=.75)return["🔥","Marca en tendencia","Muy buen trabajo. Pocas cosas se te escapan."];
+  if(p>=.6)return["🚀","Marca emergente","Vas a tope. Repasa las cartas que giraste antes de tiempo y serás imparables."];
+  if(p>=.4)return["🌱","En pleno despegue","Buena base. Cada carta revisada es aprendizaje que se queda."];
+  return["✏️","Primer drop","Todas las grandes marcas empezaron así. Repite el caso y verás el salto."];
+}
+let DL=null;
+try{window.claude&&window.claude.use&&window.claude.use("downloads").then(d=>{DL=d}).catch(()=>{})}catch(e){}
+async function downloadXlsx(){
+  const bin=atob(XLSX_B64);const u=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i);
+  if(DL){try{await DL.save({filename:XLSX_NAME,data:new Blob([u])});toast("Archivo guardado ✔")}
+    catch(e){toast(e&&e.code==="declined"?"Descarga cancelada":"No se pudo descargar: pídeselo a tu profe")}return}
+  try{const url=URL.createObjectURL(new Blob([u],{type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"}));
+  const a=document.createElement("a");a.href=url;a.download=XLSX_NAME;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),2000);toast("Descargando "+XLSX_NAME)}
+  catch(e){toast("No se pudo descargar: pídeselo a tu profe")}
+}
+function hash(s){let h=7;for(const ch of s)h=(h*31+ch.charCodeAt(0))%9973;return h.toString(36).toUpperCase().padStart(3,"0")}
+function resultCode(){
+  const o={n:S.name,t:S.team,e:S.emoji,s:totalStars(),m:totalMax(),c:CASES.map(c=>caseStars(c)),d:CASES.map(c=>caseProg(c)),tm:Math.round(CASES.reduce((a,c)=>a+caseTime(c),0)/1000)};
+  const body=btoa(unescape(encodeURIComponent(JSON.stringify(o))));return "DL-"+body+"-"+hash(body);
+}
+function readCode(code){
+  const m=code.trim().match(/^DL-(.+)-([0-9A-Z]{3})$/);if(!m)return null;
+  if(hash(m[1])!==m[2])return{err:1};
+  try{return JSON.parse(decodeURIComponent(escape(atob(m[1]))))}catch(e){return null}
+}
+
+/* ================== GUARDAR / RECUPERAR ================== */
+const ALLC=()=>CASES.flatMap(c=>c.cards.map((k,i)=>[c,i]));
+function packState(withLogo){
+  const cs=ALLC().map(([c,i])=>{const st=S.cards[c.id+":"+i];if(!st||st.status==="open")return "o00";return (st.status==="done"?"d":"p")+(st.stars||0)+(st.bonus||0)}).join("");
+  const o={v:1,n:S.name,t:S.team,e:S.emoji,s:S.slogan,sd:CASES.map(c=>S.setupDone[c.id]?1:0),el:CASES.map(c=>S.el[c.id]||0),c:cs};
+  if(withLogo&&S.logo)o.l=S.logo;
+  return o;
+}
+function unpackState(o){
+  if(!o||!o.c||!o.t)throw 0;
+  const ns=blank();ns.teacher=S.teacher||[];ns.name=o.n||"";ns.team=o.t;ns.emoji=o.e||"🔥";ns.slogan=o.s||"";if(o.l)ns.logo=o.l;else if(S.logo&&S.team===o.t)ns.logo=S.logo;
+  CASES.forEach((c,ix)=>{if(o.sd&&o.sd[ix])ns.setupDone[c.id]=true;ns.el[c.id]=(o.el&&o.el[ix])||0});
+  ALLC().forEach(([c,i],j)=>{const t=o.c.substr(j*3,3);if(!t||t[0]==="o")return;const k=c.cards[i];
+    ns.cards[c.id+":"+i]={status:t[0]==="d"?"done":"peek",stars:+t[1],bonus:+t[2],tries:0,checks:[],...(k.bonus&&t[0]==="d"?{bonusTried:true}:{})}});
+  CASES.forEach(c=>{if(c.cards.every((k,i)=>ns.cards[c.id+":"+i]))ns.finishedAt[c.id]=Date.now()});
+  return ns;
+}
+function saveCode(){const body=btoa(unescape(encodeURIComponent(JSON.stringify(packState(false)))));return "DLSAVE-"+body+"-"+hash(body)}
+function readSave(code){const m=code.trim().replace(/\s+/g,"").match(/^DLSAVE-(.+)-([0-9A-Z]{3})$/);if(!m||hash(m[1])!==m[2])throw 0;return JSON.parse(decodeURIComponent(escape(atob(m[1]))))}
+function saveUI(){
+  if(ONLINE){modal(`<div class="tabs"><h3 style="margin:0">☁️ Tu progreso se guarda solo</h3><button class="btn ghost sm" style="margin-left:auto" onclick="closeModal()">✕</button></div>
+   <p style="margin-top:0">Has entrado con <b>${esc(ONLINE.email)}</b>. Cada vez que avanzas, DROP LAB guarda tu partida en tu cuenta del colegio. Mañana, desde cualquier ordenador, abre el enlace de Classroom y seguirás donde lo dejaste.</p>
+   <p>Estado ahora: <b id="syncp2">${syncLabel()}</b></p><p><button class="btn" onclick="pushNow().then(()=>{const e=$('#syncp2');if(e)e.textContent=syncLabel()})">Guardar ahora</button></p>
+   <details class="hint"><summary>Copia de seguridad (solo si tu profe te lo pide)</summary><div><div class="code" id="svc">${saveCode()}</div><p><button class="btn ghost sm" onclick="copyEl('svc')">Copiar código</button></p></div></details>`);$("#modalBody").classList.add("wide");return}
+  modal(`<div class="tabs"><h3 style="margin:0">💾 Guarda tu progreso</h3><button class="btn ghost sm" style="margin-left:auto" onclick="closeModal()">✕</button></div>
+   <p style="margin-top:0">Estás usando la versión de demostración: tu progreso se guarda solo <b>en este navegador</b>. Si mañana usas otro ordenador, otro navegador, o se borra el historial, lo perderías. Para llevártelo, guárdalo de una de estas dos formas:</p>
+   <h4 style="margin:14px 0 6px">Opción A · Código de guardado <span style="color:var(--muted);font-weight:400">(la más fácil)</span></h4>
+   <p style="margin:0 0 8px;color:var(--muted)">Cópialo y pégalo en un sitio seguro: un comentario privado en Classroom, una nota del móvil o un correo a ti mismo/a.</p>
+   <div class="code" id="svc">${saveCode()}</div><p><button class="btn" onclick="copyEl('svc')">Copiar código</button></p>
+   <h4 style="margin:14px 0 6px">Opción B · Archivo de progreso <span style="color:var(--muted);font-weight:400">(guarda también tu logo)</span></h4>
+   <p style="margin:0 0 8px;color:var(--muted)">Descárgalo y guárdalo en tu Drive o en un USB.</p>
+   <button class="btn ghost" onclick="downloadSave()">⬇ Descargar archivo .json</button>
+   <p style="margin-top:16px;font-size:14px;color:var(--muted)">Para continuar otro día: en la portada pulsa <b>«💾 Recuperar mi progreso»</b>.</p>`);
+  $("#modalBody").classList.add("wide");
+}
+async function downloadSave(){
+  const txt=JSON.stringify(packState(true));const fn="droplab-"+slug(S.name||S.team)+".json";
+  if(DL){try{await DL.save({filename:fn,data:txt});toast("Archivo guardado ✔")}catch(e){toast(e&&e.code==="declined"?"Descarga cancelada":"No se pudo descargar: usa el código")}return}
+  try{const url=URL.createObjectURL(new Blob([txt],{type:"application/json"}));const a=document.createElement("a");a.href=url;a.download=fn;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),2000);toast("Descargando "+fn)}
+  catch(e){toast("No se pudo descargar: usa el código")}
+}
+function restoreUI(){
+  modal(`<div class="tabs"><h3 style="margin:0">💾 Recuperar mi progreso</h3><button class="btn ghost sm" style="margin-left:auto" onclick="closeModal()">✕</button></div>
+   <h4 style="margin:6px 0 6px">Opción A · Pega tu código de guardado</h4>
+   <textarea id="rsc" rows="3" placeholder="DLSAVE-..."></textarea><p><button class="btn" onclick="doRestore($('#rsc').value)">Recuperar</button></p>
+   <h4 style="margin:14px 0 6px">Opción B · Sube tu archivo de progreso (.json)</h4>
+   <label class="btn ghost" style="display:inline-block">📂 Elegir archivo<input type="file" accept=".json,application/json" hidden onchange="restoreFile(this)"></label>
+   <div id="rserr" class="fb bad"></div>`);
+  $("#modalBody").classList.add("wide");
+}
+function applyRestore(o){
+  if(S.team&&Object.keys(S.cards).length&&!confirmed){pendingRestore=o;$("#rserr").innerHTML=`Este navegador ya tiene una partida de <b>${esc(S.name||S.team)}</b>. Si continúas, se sustituirá. <button class="btn pink sm" onclick="confirmed=true;applyRestore(pendingRestore)">Sustituir</button>`;return}
+  confirmed=false;S=unpackState(o);save();closeModal();toast("¡Progreso recuperado! 🔥");go("home");
+}
+let confirmed=false,pendingRestore=null;
+function doRestore(code){try{applyRestore(readSave(code))}catch(e){$("#rserr").textContent="Ese código no es válido. Cópialo entero, desde DLSAVE- hasta el final."}}
+function restoreFile(inp){const f=inp.files&&inp.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{const o=JSON.parse(r.result);applyRestore(o)}catch(e){$("#rserr").textContent="Ese archivo no es un progreso de DROP LAB."}};r.readAsText(f)}
+function copyEl(id){const t=$("#"+id).textContent;(navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).then(()=>toast("Copiado ✔")).catch(()=>{const r=document.createRange();r.selectNodeContents($("#"+id));const s=getSelection();s.removeAllRanges();s.addRange(r);toast("Seleccionado: pulsa Ctrl+C")})}
+
+/* ================== VISTAS ================== */
+const GLOS=[
+ ["ERP","Programa que reúne en un solo sitio todo lo que pasa en una empresa: compras, almacén, ventas, facturas y contabilidad. Odoo es un ERP."],
+ ["Odoo","El ERP que usarás. Lo emplean miles de empresas en todo el mundo. Funciona en el navegador, como una web."],
+ ["IVA","Impuesto que se suma al precio. En España, el general es del 21 %: 100 € + IVA = 121 €."],
+ ["Base imponible","Precio sin IVA. Sobre ella se calcula el impuesto."],
+ ["Margen","Lo que ganas por unidad: precio de venta − coste."],
+ ["Presupuesto","Propuesta de precio que se envía al cliente. Cuando la acepta, pasa a ser un pedido."],
+ ["Pedido de compra","Documento con lo que le compras a un proveedor: qué, cuánto y a qué precio."],
+ ["Recepción / Entrega","Entrada de mercancía en el almacén (recepción) y salida hacia el cliente (entrega o albarán)."],
+ ["Stock","Las unidades que tienes en el almacén."],
+ ["Factura rectificativa","Factura que corrige otra que tenía un error. En otros países la llaman «nota de crédito»."],
+ ["Factura simplificada","El tique de caja de toda la vida. La factura completa, en cambio, lleva el nombre y el NIF del cliente."],
+ ["Pérdidas y ganancias","Informe que dice si la empresa gana o pierde dinero: ingresos − gastos."],
+ ["TPV","Terminal Punto de Venta: la caja registradora digital de una tienda."],
+ ["Arqueo de caja","Contar el dinero al cerrar y comprobar que coincide con lo que dice el sistema."],
+ ["Pop-up store","Tienda temporal que abre solo unos días. Genera expectación y ventas rápidas."],
+ ["Drop","Lanzamiento de una colección limitada en una fecha concreta. Cuando se agota, no vuelve."],
+ ["Colab","Colaboración entre una marca y un artista, creador u otra marca."],
+ ["SEO","Técnicas para que una web salga en Google sin pagar anuncios."],
+ ["Palabra clave","Lo que la gente escribe en Google, por ejemplo «sudaderas oversize»."],
+ ["Variante","Cada combinación de un producto: el hoodie en talla M y color lima es una variante."],
+ ["Ticket medio","Lo que gasta de media cada cliente en una compra."],
+ ["Venta cruzada (cross-selling)","Ofrecer un producto complementario: si compras el hoodie, te sugiero la gorra."],
+ ["Prueba social","Cifras u opiniones que generan confianza: «+5.000 seguidores», reseñas…"]
+];
+function help(tab="how"){
+  const how=`<div class="rules">
+   <div class="rule"><div class="n">1</div><p><b>Lee el reto</b> de la carta: qué te pide el personaje y qué tienes que conseguir.</p></div>
+   <div class="rule"><div class="n">2</div><p><b>Ve a Odoo</b> (en otra pestaña) y hazlo. Si no sabes dónde, abre la <b>🧭 pista</b>: es gratis.</p></div>
+   <div class="rule"><div class="n">3</div><p><b>Contesta la pregunta</b> de comprobación con el dato que te da Odoo. Tienes 3 intentos.</p></div>
+   <div class="rule"><div class="n">4</div><p><b>La carta se gira</b> y ves la solución paso a paso. Compárala con lo que has hecho.</p></div>
+  </div><p style="margin-top:12px"><span class="stars">★★</span> resuelto sin mirar · <span class="stars">★</span> si giras la carta antes · ⭐ algunas cartas tienen estrella extra.</p>
+  ${ONLINE?`<p>☁️ <b>Tu progreso se guarda solo</b> en tu cuenta del colegio. Otro día, abre el enlace de Classroom y seguirás donde lo dejaste.</p>`:`<p>💾 <b>¿Vas a seguir otro día u otro ordenador?</b> Antes de cerrar, pulsa <b>Guardar</b> (arriba) y copia tu código. Al volver, en la portada pulsa «Recuperar mi progreso».</p>`}
+  <p style="color:var(--muted)">¿Un número con decimales? Escríbelo como quieras: <b>1089</b>, <b>1.089,00</b> o <b>1089 €</b> valen igual.</p>`;
+  const gl=`<dl class="gl">${GLOS.map(g=>`<dt>${g[0]}</dt><dd>${g[1]}</dd>`).join("")}</dl>`;
+  modal(`<div class="tabs"><button class="btn sm ${tab==="how"?"":"ghost"}" onclick="help('how')">❓ Cómo se juega</button><button class="btn sm ${tab==="gl"?"":"ghost"}" onclick="help('gl')">📖 Diccionario</button><button class="btn ghost sm" style="margin-left:auto" onclick="closeModal()">✕</button></div>${tab==="how"?how:gl}`);
+  $("#modalBody").classList.add("wide");
+}
+const _close=closeModal;closeModal=function(){$("#modalBody").classList.remove("wide");_close()};
+const mark=(cls="logoimg")=>S.logo?`<img class="${cls}" src="${S.logo}" alt="">`:S.emoji;
+function onLogo(inp){
+  const f=inp.files&&inp.files[0];if(!f)return;
+  if(!/^image\//.test(f.type)){toast("Eso no parece una imagen");return}
+  const img=new Image();const url=URL.createObjectURL(f);
+  img.onload=()=>{const sz=160,cv=document.createElement("canvas");cv.width=cv.height=sz;const x=cv.getContext("2d");
+    const m=Math.min(img.width,img.height);x.fillStyle="#fff";x.fillRect(0,0,sz,sz);
+    x.drawImage(img,(img.width-m)/2,(img.height-m)/2,m,m,0,0,sz,sz);
+    S.logo=cv.toDataURL("image/jpeg",.8);URL.revokeObjectURL(url);save();
+    document.querySelectorAll("[data-logo]").forEach(e=>e.innerHTML=`<img src="${S.logo}" alt="" style="width:100%;height:100%;object-fit:cover">`);
+    const p=$("#pvE");if(p)p.innerHTML=`<img class="bigl" src="${S.logo}" alt="">`;hud();save();toast("Logo cargado ✔");if(view.name==="card")render()};
+  img.onerror=()=>toast("No se pudo leer la imagen");img.src=url;
+}
+function logoPicker(){return `<div class="upl"><div class="box" data-logo>${S.logo?`<img src="${S.logo}" alt="">`:"Sin logo"}</div>
+ <div><label class="btn ghost sm" style="display:inline-block;margin:0;color:var(--ink)">📷 Subir logo<input type="file" accept="image/*" onchange="onLogo(this)" hidden></label>
+ ${S.logo?`<button class="btn ghost sm" onclick="S.logo=null;save();render()">Quitar</button>`:""}
+ <div style="font-size:12px;color:var(--muted);margin-top:6px">PNG o JPG. Diséñalo en Canva o a mano y hazle una foto.</div></div></div>`}
+
+function hud(){
+  const h=$("#hud");
+  if(!S.team){h.innerHTML=`<button class="btn ghost sm" onclick="help()">❓ Ayuda</button><button class="btn ghost sm" onclick="help('gl')">📖 Diccionario</button><button class="btn ghost sm" onclick="go('teacher')">👩‍🏫 Profe</button>`;return}
+  h.innerHTML=`${ONLINE?`<span class="pill" id="syncp" title="Tu progreso se guarda en tu cuenta del colegio">${syncLabel()}</span>`:""}<span class="pill">${mark()} ${esc(S.team)}</span><span class="pill"><span class="stars">★</span> ${totalStars()} / ${totalMax()}</span>
+  <button class="btn ghost sm" onclick="help()">❓ Ayuda</button><button class="btn ghost sm" onclick="help('gl')">📖</button><button class="btn pink sm" onclick="saveUI()">💾 Guardar</button><button class="btn ghost sm" onclick="go('home')">Misiones</button><button class="btn ghost sm" onclick="go('result')">Resultados</button><button class="btn ghost sm" onclick="go('teacher')" title="Panel docente">👩‍🏫</button>`;
+}
+function go(n,extra={}){view=Object.assign({name:n},extra);render();if(ONLINE&&S.team&&(n==="card"||n==="case"))schedulePush();window.scrollTo({top:0,behavior:"smooth"})}
+function render(){
+  hud();const a=$("#app");
+  a.innerHTML=({start:startView,home:homeView,case:caseView,card:cardView,result:resultView,teacher:teacherView})[view.name]();
+}
+
+function startView(){
+  const em=["🔥","🧢","👟","⚡","🖤","🌊","💿","🛹","🦈","🌀"];
+  const pol=(k,t)=>`<div class="pola"><img src="${IMG[k]}" alt=""><small>${t}</small></div>`;
+  return `<section style="text-align:center;margin-bottom:6px"><span class="tag">Simulador de marca streetwear</span>
+   <h1 style="font-size:clamp(30px,5.4vw,56px);margin:12px 0 8px;font-weight:900;line-height:1.02">Crea tu <span class="hl" style="background:var(--lime);color:#0e0e11;padding:0 .18em;border-radius:6px;display:inline-block;transform:rotate(-2deg)">marca</span>.<br>Hazla <span style="color:var(--pink)">crecer</span>.</h1>
+   <p style="color:var(--muted);max-width:640px;margin:0 auto;font-size:17px;line-height:1.5">Un juego individual en el que fundas una marca de ropa urbana y la gestionas con <b style="color:var(--ink)">Odoo</b>, un programa profesional que usan miles de empresas.</p>
+   <div class="collage">${pol("hero","EL EQUIPO")}${pol("cv","01 · LANZA TU MARCA")}${pol("tpv","02 · POP-UP STORE")}${pol("web","03 · EL DROP ONLINE")}</div></section>
+  <div class="info">
+   <div class="panel"><h3>🎯 ¿Qué vas a hacer?</h3><ul><li><b>Fundar tu marca:</b> nombre, eslogan y logo.</li><li><b>3 misiones:</b> producir y vender, abrir una tienda pop-up y lanzar una colección online.</li><li>Cada misión son <b>cartas con retos</b> que resuelves en Odoo.</li></ul></div>
+   <div class="panel"><h3>💡 ¿Para qué sirve?</h3><p>Para entender cómo funciona una marca <b>por dentro</b>: desde que pides las sudaderas al taller hasta que las vendes online. Y para aprender a manejar un programa que muchas empresas usan y que te pueden pedir en las prácticas.</p></div>
+   <div class="panel"><h3>🧰 ¿Qué necesitas?</h3><ul><li>Un ordenador con internet.</li><li>Un correo electrónico para crear la cuenta de Odoo.</li><li>Dos pestañas abiertas: <b>esta app</b> y <b>Odoo</b>.</li>${ONLINE?`<li>Tu progreso se guarda solo: ☁️ arriba te dice si está guardado.</li>`:`<li>Si juegas en varios días: <b>💾 guarda tu código</b> al terminar cada sesión.</li>`}</ul></div>
+   <div class="panel"><h3>🆘 ¿Y si te atascas?</h3><ul><li>Cada carta tiene una <b>🧭 pista</b> gratis que dice dónde se hace.</li><li>El <b>📖 diccionario</b> explica todas las palabras raras.</li><li>Siempre puedes girar la carta y ver la solución.</li></ul></div>
+  </div>
+  <section class="hero" style="margin-top:16px">
+   <div class="panel"><h2 style="margin:0 0 6px;font-size:20px">¿Cómo se juega?</h2>
+   <div class="rules">
+    <div class="rule"><div class="n">1</div><p><b>Lee el reto</b> de la carta. ¡Sin girarla!</p></div>
+    <div class="rule"><div class="n">2</div><p><b>Resuélvelo en Odoo</b> y escribe el dato que te pide la pregunta de comprobación.</p></div>
+    <div class="rule"><div class="n">3</div><p><b>La carta se gira</b>: compara tu proceso con la solución.</p></div>
+   </div>
+   <p style="margin-top:14px"><span class="stars">★★</span> si lo resuelves sin mirar · <span class="stars">★</span> si giras antes de tiempo · algunas cartas esconden una <b>estrella extra</b>. Al final, ranking de marcas de la clase. 🏆</p>
+   <button class="btn ghost sm" onclick="help('gl')">📖 Ver el diccionario</button></div>
+   <div class="panel team-form"><h2 style="margin:0;font-size:20px">Paso 1 · Funda tu marca</h2>
+    <label for="nm">Tu nombre y primer apellido * <span style="font-weight:400">(solo lo verá tu profe)</span></label><input type="text" id="nm" maxlength="40" placeholder="Ej.: Uxía Pérez">
+    <label for="tn">Nombre de la marca *</label><input type="text" id="tn" maxlength="24" placeholder="Ej.: NÉBOA Studio" oninput="pv()">
+    <label for="sl">Eslogan (opcional)</label><input type="text" id="sl" maxlength="50" placeholder="Ej.: Hecho con salitre" oninput="pv()">
+    <label>Logo (puedes subirlo ahora o más tarde: es el primer reto)</label>${logoPicker()}
+    <label>Icono provisional</label><div class="avatars">${em.map(e=>`<button class="av ${e===S.emoji?"sel":""}" onclick="pickEm('${e}',this)">${e}</button>`).join("")}</div>
+    <div class="preview"><div style="font-size:34px" id="pvE">${S.logo?`<img class="bigl" src="${S.logo}" alt="">`:S.emoji}</div><div class="bn" id="pvN">TU MARCA</div><div class="sl" id="pvS">Tu eslogan aquí</div></div>
+    <button class="btn" style="width:100%;margin-top:16px" onclick="startTeam()">Lanzar la marca →</button>
+    ${ONLINE?`<p style="margin:14px 0 0;color:var(--muted);font-size:14px;text-align:center">☁️ Has entrado con <b style="color:var(--ink)">${esc(ONLINE.email)}</b>. Tu progreso se guardará solo en tu cuenta del colegio: podrás seguir desde cualquier ordenador.</p>`:`<div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--line);text-align:center"><p style="margin:0 0 8px;color:var(--muted);font-size:14px">¿Ya empezaste otro día o en otro ordenador?</p><button class="btn pink" style="width:100%" onclick="restoreUI()">💾 Recuperar mi progreso</button></div>`}
+   </div></section>
+   <div class="marquee"><span>DROP 01 · POP-UP STORE · HECHO EN GALICIA · EDICIÓN LIMITADA · SOLD OUT · DROP 01 · POP-UP STORE · HECHO EN GALICIA · EDICIÓN LIMITADA · SOLD OUT · </span></div>`;
+}
+function pv(){$("#pvN").textContent=($("#tn").value.trim()||"TU MARCA").toUpperCase();$("#pvS").textContent=$("#sl").value.trim()||"Tu eslogan aquí"}
+function pickEm(e,el){S.emoji=e;document.querySelectorAll(".av").forEach(b=>b.classList.remove("sel"));el.classList.add("sel");const p=$("#pvE");if(p&&!S.logo)p.textContent=e}
+function startTeam(){const n=$("#nm").value.trim();if(!n){toast("Escribe tu nombre para que tu profe sepa quién eres 😉");return}const v=$("#tn").value.trim();if(!v){toast("Pon nombre a la marca 😉");return}S.name=n;S.team=v;S.slogan=$("#sl").value.trim();save();go("home")}
+
+function homeView(){
+  return `<div class="row" style="justify-content:space-between"><span class="tag">${S.emoji} ${esc(S.team)}${S.slogan?" · "+esc(S.slogan):""}</span><details><summary class="btn ghost sm" style="list-style:none">🎨 Logo de la marca</summary><div class="panel" style="margin-top:8px;padding:14px">${logoPicker()}</div></details></div>
+  <h2 style="margin:12px 0 0;font-size:28px">Tus 3 misiones</h2>
+  <p style="color:var(--muted);margin:6px 0 0;line-height:1.5">Cada misión es un conjunto de cartas con retos. Te recomendamos jugarlas <b style="color:var(--ink)">en orden: 01 → 02 → 03</b>, porque forman una historia y cada una aprovecha lo que hiciste en la anterior. Pulsa una misión para ver de qué va.</p>
+  <div class="cases">${CASES.map((c,ix)=>{const u=unlocked(c),p=caseProg(c),n=c.cards.length;return `
+   <button class="case ${u?"":"locked"}" style="background:${c.bg};color:${c.fg}" onclick="openCase('${c.id}')">
+    <div class="pola"><img src="${IMG[c.id]}" alt=""></div>
+    <div class="ctext"><div style="font-family:var(--disp);font-weight:900;font-size:13px;opacity:.75">MISIÓN 0${ix+1}${ix===0?" · EMPEZAD AQUÍ":" · DESPUÉS DE LA 0"+ix}</div><h3>${c.emoji} ${c.title}</h3><p>${c.blurb}</p></div>
+    <div><div class="meta"><span>${p}/${n} cartas</span><span>★ ${caseStars(c)}/${caseMax(c)}</span></div><div class="bar"><i style="width:${p/n*100}%"></i></div></div>
+   </button>`}).join("")}</div>`;
+}
+
+function caseView(){
+  const c=CASES.find(x=>x.id===view.caseId);const sd=S.setupDone[c.id];
+  return `<div class="crumbs"><button class="btn ghost sm" onclick="go('home')">← Misiones</button><span class="pill">${c.emoji} ${c.title}</span><span class="pill">⏱ <span class="timer" id="tmr">${fmtTime(caseTime(c))}</span></span><span class="pill stars">★ ${caseStars(c)}/${caseMax(c)}</span></div>
+  <div class="panel" style="margin-top:12px;border-top:6px solid ${c.bg}">
+   <p style="margin:0 0 4px;line-height:1.55">${B(c.intro)}</p>
+   <div class="goalbox"><div><h4>🎯 Qué vas a hacer</h4><p>${META[c.id].goal}</p></div><div><h4>💡 Para qué te sirve</h4><p>${META[c.id].why}</p></div><div><h4>🧠 Qué aprenderás</h4><ul>${META[c.id].learn.map(x=>`<li>${x}</li>`).join("")}</ul></div></div>
+   <h3 style="margin:8px 0;font-size:17px">Antes de empezar · ${B(c.setup.title)}</h3>
+   <ol class="steps">${c.setup.steps.map(s=>`<li>${B(s)}</li>`).join("")}</ol>
+   ${c.setup.file?`<p><button class="btn sm" onclick="downloadXlsx()">⬇ Descargar ${XLSX_NAME}</button></p>`:""}
+   <div class="tip" style="margin-top:10px">${B(c.setup.tip)}</div>
+   <div style="margin-top:14px">${sd?`<span class="pill">✅ Configuración lista</span>`:`<button class="btn" onclick="setupOk('${c.id}')">¡Hecho! Muestra las cartas →</button> <span style="color:var(--muted);font-size:14px;margin-left:8px">Al pulsar, empieza a contar el tiempo ⏱ (solo mientras juegas)</span>`}</div>
+  </div>
+  ${sd?`<p style="margin:18px 0 0;color:var(--muted)">Juega las cartas <b style="color:var(--ink)">en orden</b>: cada una continúa la historia de la anterior.</p><div class="deck">${c.cards.map((k,i)=>{const st=S.cards[c.id+":"+i];const s=st?.status||"open";const got=(st?.stars||0)+(st?.bonus||0);const mx=2+(k.bonus?1:0);return `
+   <button class="mini ${s}" onclick="go('card',{caseId:'${c.id}',idx:${i}})"><div class="k">${String(i+1).padStart(2,"0")}</div><div class="t">${B(k.t)}</div>
+   <div class="stars" style="font-size:15px">${s==="open"?'<span style="color:var(--muted)">Por jugar</span>':starStr(got,mx)}</div></button>`}).join("")}</div>`:""}
+  ${caseDone(c)?`<div class="panel" style="margin-top:16px;text-align:center">${caseSummary(c)}${ONLINE?"":`<p><button class="btn pink" onclick="saveUI()">💾 Guarda tu progreso antes de cerrar</button></p>`}</div>`:""}`;
+}
+function setupOk(id){S.setupDone[id]=true;if(!S.startedAt[id])S.startedAt[id]=Date.now();save();render()}
+function caseSummary(c){const p=caseStars(c)/caseMax(c);const[e,t,d]=level(p);return `<div style="font-size:44px">${e}</div><h2 class="level">${t}</h2><p style="color:var(--muted)">${d}</p><p class="stars" style="font-size:22px">★ ${caseStars(c)} / ${caseMax(c)} · ⏱ ${fmtTime(caseTime(c))}</p>`}
+
+function cardView(){
+  const c=CASES.find(x=>x.id===view.caseId),i=view.idx,k=c.cards[i],st=cs(c.id,i);
+  const back=st.status!=="open";const n=c.cards.length;
+  const chat=k.chat.map(m=>m.me?`<div class="msgrow me"><div class="msg me"><span class="who">Tú · ${esc(S.team)}</span>${B(m.x)}</div>${S.logo?`<img class="avatar" src="${S.logo}" alt="">`:""}</div>`:`<div class="msg"><span class="who">${m.w}</span>${B(m.x)}</div>`).join("");
+  let check="";
+  if(k.check.type==="list"){
+    check=`<div class="check cl"><h4>✅ Comprobación: marca lo que has hecho</h4>${k.check.needLogo?`<div style="margin:6px 0 10px">${logoPicker()}</div><label><input type="checkbox" disabled ${S.logo?"checked":""}> Logo subido en esta app ${S.logo?"✔":"(usa el botón «Subir logo»)"}</label>`:""}${k.check.items.map((it,j)=>`<label><input type="checkbox" ${st.checks[j]?"checked":""} onchange="tick(${j},this.checked)"> ${B(it)}</label>`).join("")}
+     <button class="btn" style="margin-top:8px" id="okList" onclick="submitList()" ${listOk(k,st)?"":"disabled"}>¡Reto superado!</button></div>`;
+  }else{
+    check=`<div class="check"><h4>🔎 Pregunta de comprobación</h4><p style="margin:0 0 10px">${k.check.q}</p>
+     <div class="row"><input type="text" id="ans" inputmode="${k.check.type==="num"?"decimal":"text"}" placeholder="${k.check.type==="num"?"Ej.: 1.234,56":(k.check.hint||"Respuesta")}" onkeydown="if(event.key==='Enter')submitAns()"><button class="btn" onclick="submitAns()">Comprobar</button></div>
+     <div class="fb" id="fb">${st.tries?`Intentos: ${st.tries}/3`:""}</div></div>`;
+  }
+  const front=`<div class="face"><div class="fhead" style="background:${c.bg};color:${c.fg}"><div><small>${c.title} · Carta ${i+1}/${n}</small><h2>${B(k.t)}</h2></div><div class="row" style="flex-wrap:nowrap">${ART[c.id]}<div class="num">${i+1}</div></div></div>
+   <div class="fbody"><div class="chat">${chat}</div>${k.doc?`<div class="doc">${B(esc(k.doc))}</div>`:""}
+    ${k.file?`<div><button class="btn sm ghost" onclick="downloadXlsx()">⬇ Descargar ${XLSX_NAME}</button></div>`:""}
+    <div class="task">🎯 Reto: ${B(k.task)}</div>
+    ${k.why?`<div class="why">🤔 <b>¿Para qué sirve esto?</b> ${k.why}</div>`:""}
+    ${k.app?`<details class="hint"><summary>🧭 Pista gratis: ¿en qué parte de Odoo se hace? (no resta estrellas)</summary><div>Busca en: <b>${k.app}</b></div></details>`:""}
+    ${check}
+    <div class="actions"><span style="color:var(--muted);font-size:14px">Vale <span class="stars">★★</span>${k.bonus?' + <span class="stars">★</span> extra':""}</span>
+     <button class="btn ghost sm" onclick="askPeek()">👀 Girar la carta (pierdes 1★)</button></div></div></div>`;
+  const sol=k.sol;
+  const bonusBox=(k.bonus&&st.status==="done"&&st.bonusTried===undefined)?`<div class="check"><h4>${k.bonusQ.q}</h4><div class="row"><input type="text" id="bans" inputmode="decimal" placeholder="Importe en €" onkeydown="if(event.key==='Enter')submitBonus()"><button class="btn pink" onclick="submitBonus()">Probar suerte</button></div><p style="font-size:13px;color:var(--muted);margin:6px 0 0">Solo hay un intento. Contéstala antes de leer la solución 😉</p></div>`:"";
+  const got=st.stars+(st.bonus||0);
+  const rev=`<div class="face rev"><div class="fhead" style="background:var(--paper2)"><div><small>Solución · Carta ${i+1}</small><h2>${B(k.t)}</h2></div><div class="num" style="background:${c.bg};color:${c.fg}">${i+1}</div></div>
+   <div class="fbody">
+    <div class="pill" style="justify-self:start;font-size:15px">${st.status==="done"?"🔥 ¡Resuelto sin mirar!":"👀 Has girado la carta"} · <span class="stars">${starStr(got,2+(k.bonus?1:0))}</span></div>
+    ${bonusBox}
+    <div class="path">${sol.path.map((p,j)=>(j?"<i>›</i>":"")+`<span>${p}</span>`).join("")}</div>
+    <ol class="steps">${sol.steps.map(s=>`<li>${B(s)}</li>`).join("")}</ol>
+    ${sol.tip?`<div class="tip">💡 ${B(sol.tip)}</div>`:""}
+    ${sol.es?`<div class="es">${sol.es}</div>`:""}
+    <p style="font-size:13px;color:var(--muted);margin:0">Los nombres de los menús pueden variar un poco según la versión y el idioma de Odoo. Si tu camino fue otro pero el resultado es el mismo, ¡también vale!</p>
+    <div class="actions"><button class="btn ghost" onclick="go('case',{caseId:'${c.id}'})">← Ver todas las cartas</button>
+     ${i<n-1?`<button class="btn" onclick="go('card',{caseId:'${c.id}',idx:${i+1}})">Siguiente carta →</button>`:`<button class="btn pink" onclick="go('case',{caseId:'${c.id}'})">🏁 Ver resultado de la misión</button>`}</div>
+   </div></div>`;
+  return `<div class="crumbs"><button class="btn ghost sm" onclick="go('case',{caseId:'${c.id}'})">← ${c.title}</button><span class="pill">⏱ <span class="timer" id="tmr">${fmtTime(caseTime(c))}</span></span></div>
+   <div class="scene"><div class="flip ${back?"back":""}">${front}${rev}</div></div>`;
+}
+function cur(){const c=CASES.find(x=>x.id===view.caseId);return{c,k:c.cards[view.idx],st:cs(c.id,view.idx)}}
+function finishCard(status,stars,ev){
+  const{c,st}=cur();st.status=status;st.stars=stars;
+  if(caseDone(c)&&!S.finishedAt[c.id])S.finishedAt[c.id]=Date.now();
+  save();
+  if(stars===2){const r=(ev&&ev.target)?ev.target.getBoundingClientRect():{left:innerWidth/2,top:innerHeight/2};burst(r.left+20,r.top)}
+  setTimeout(render,stars===2?450:50);
+}
+function submitAns(){
+  const{k,st}=cur();const v=$("#ans").value;const fb=$("#fb");if(!v.trim())return;
+  let ok=false,alt=false;
+  if(k.check.type==="num"){const n=parseNum(v);ok=Math.abs(n-k.check.a)<0.011;alt=!ok&&(k.check.alts||[]).some(x=>Math.abs(n-x)<0.011)}
+  else ok=k.check.a.map(norm).includes(norm(v));
+  if(ok||alt){if(alt&&k.check.altMsg)setTimeout(()=>modal(`<h3 style="margin-top:0">✔ Respuesta aceptada</h3><p>${k.check.altMsg}</p><button class="btn" onclick="closeModal()">Entendido</button>`),500);finishCard("done",2,{target:$("#ans")});return}
+  st.tries++;save();
+  if(st.tries>=3){fb.className="fb bad";fb.textContent="Tercer intento fallido. Gira la carta para ver la solución (1★).";setTimeout(()=>finishCard("peek",1),1600)}
+  else{fb.className="fb bad";fb.textContent=`Todavía no. Revisa el proceso en Odoo (intento ${st.tries}/3).`}
+}
+function listOk(k,st){return k.check.items.every((_,x)=>st.checks[x])&&(!k.check.needLogo||!!S.logo)}
+function tick(j,v){const{k,st}=cur();st.checks[j]=v;save();$("#okList").disabled=!listOk(k,st)}
+function submitList(){finishCard("done",2,{target:$("#okList")})}
+function submitBonus(){
+  const{k,st}=cur();const n=parseNum($("#bans").value);if(isNaN(n))return;
+  st.bonusTried=true;if(Math.abs(n-k.bonusQ.a)<0.011){st.bonus=1;toast("⭐ ¡Ojo de auditor! +1 estrella");burst(innerWidth/2,innerHeight/2)}else{st.bonus=0;toast("Casi… lee la solución para descubrirlo")}
+  save();render();
+}
+function askPeek(){modal(`<h3 style="margin-top:0">¿Girar la carta?</h3><p>Si miras la solución ahora, esta carta valdrá <b>1★</b> en lugar de 2. A veces compensa: lo importante es aprender.</p><div class="actions"><button class="btn ghost" onclick="closeModal()">Seguimos intentándolo</button><button class="btn pink" onclick="closeModal();finishCard('peek',1)">Girar la carta</button></div>`)}
+
+function resultView(){
+  const code=resultCode();const p=totalStars()/totalMax();const[e,t,d]=level(p);
+  return `<div class="panel" style="text-align:center;background:linear-gradient(135deg,#7b5cff,#ff3d8b);border:0"><div style="font-size:52px">${S.logo?`<img class="bigl" src="${S.logo}" alt="">`:S.emoji}</div><h2 style="margin:10px 0 4px;font-size:30px;font-weight:900">${esc(S.team).toUpperCase()}</h2><p style="margin:0 0 4px;font-weight:600">${esc(S.name||"")}</p>${S.slogan?`<p style="margin:0;opacity:.9">${esc(S.slogan)}</p>`:""}
+   <p class="stars" style="font-size:26px;margin:10px 0;color:#fff">★ ${totalStars()} / ${totalMax()}</p><div style="font-size:40px">${e}</div><h3 class="level">${t}</h3><p>${d}</p></div>
+   <div class="panel" style="margin-top:16px"><table><tr><th>Caso</th><th>Cartas</th><th>Estrellas</th><th>Tiempo</th></tr>
+   ${CASES.map(c=>`<tr><td>${c.emoji} ${c.title}</td><td>${caseProg(c)}/${c.cards.length}</td><td class="stars">${caseStars(c)}/${caseMax(c)}</td><td>${S.setupDone[c.id]?fmtTime(caseTime(c)):"—"}</td></tr>`).join("")}</table></div>
+   <div class="panel" style="margin-top:16px"><h3 style="margin-top:0;font-size:17px">${ONLINE?"📤 Tu profe ya ve tu progreso en directo":"📤 Último paso: envía tu código a la profe"}</h3><p style="color:var(--muted);margin-top:0">Cópialo y entrégalo por Classroom, el correo o donde diga tu profe. Si se modifica a mano, deja de valer.</p>
+   <div class="code" id="rc">${code}</div><p><button class="btn" onclick="copyCode()">Copiar código</button></p></div>
+   ${ONLINE?"":`<div class="panel" style="margin-top:16px"><h3 style="margin-top:0;font-size:17px">💾 ¿Seguirás otro día?</h3><p style="color:var(--muted);margin-top:0">El código de resultados <b>no sirve para continuar</b>: es solo para tu profe. Para seguir jugando otro día, guarda tu progreso.</p><button class="btn pink" onclick="saveUI()">💾 Guardar progreso</button></div>`}`;
+}
+function copyCode(){const t=$("#rc").textContent;(navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).then(()=>toast("Código copiado ✔")).catch(()=>{const r=document.createRange();r.selectNodeContents($("#rc"));const s=getSelection();s.removeAllRanges();s.addRange(r);toast("Seleccionado: pulsa Ctrl+C")})}
+
+let LIVE=null,_liveT=null;
+function ago(sec){if(sec<60)return"ahora";if(sec<3600)return"hace "+Math.floor(sec/60)+" min";if(sec<86400)return"hace "+Math.floor(sec/3600)+" h";return"hace "+Math.floor(sec/86400)+" d"}
+async function loadLive(){try{LIVE=await gas("getAll");if(view.name==="teacher")render()}catch(e){LIVE={error:String(e&&e.message||e)};if(view.name==="teacher")render()}}
+function liveBlock(){
+  if(!ONLINE||!ONLINE.teacher)return"";
+  if(!LIVE){loadLive();return `<div class="panel" style="margin-top:12px"><h2 style="margin:0;font-size:22px">📡 Progreso en directo</h2><p style="color:var(--muted)">Cargando…</p></div>`}
+  if(LIVE.error)return `<div class="panel" style="margin-top:12px"><h2 style="margin:0;font-size:22px">📡 Progreso en directo</h2><p class="fb bad">${esc(LIVE.error)}</p></div>`;
+  const rows=(LIVE.students||[]).filter(r=>r.summary).sort((a,b)=>b.summary.s-a.summary.s||a.summary.tm-b.summary.tm);
+  const pend=(LIVE.students||[]).filter(r=>!r.summary).length;const medal=["🥇","🥈","🥉"];
+  return `<div class="panel" style="margin-top:12px"><div class="row" style="justify-content:space-between"><h2 style="margin:0;font-size:22px">📡 Progreso en directo</h2>
+   <div class="row"><span style="color:var(--muted);font-size:13px">Se actualiza cada 30 s</span><button class="btn ghost sm" onclick="loadLive()">↻ Actualizar</button>${LIVE.sheetUrl?`<a class="btn sm" href="${LIVE.sheetUrl}" target="_blank" rel="noopener" style="text-decoration:none">Abrir la hoja</a>`:""}</div></div>
+   <p style="color:var(--muted)">${rows.length} alumno/a(s) jugando${pend?` · ${pend} sin empezar`:""}.</p>
+   ${rows.length?`<div style="overflow-x:auto"><table class="podium"><tr><th></th><th>Alumno/a · marca</th><th>Estrellas</th>${CASES.map(c=>`<th>${c.emoji}</th>`).join("")}<th>Dónde va</th><th>Tiempo</th><th>Última actividad</th><th></th></tr>
+   ${rows.map((r,i)=>{const m=r.summary;return `<tr><td>${medal[i]||i+1}</td><td><div class="row" style="flex-wrap:nowrap">${r.logo?`<img class="avatar" src="${r.logo}" alt="">`:`<span style="font-size:20px">${m.e||""}</span>`}<div><b>${esc(m.n||r.email)}</b><br><small style="color:var(--muted)">${esc(m.t||"")} · ${esc(r.email)}</small></div></div></td>
+     <td class="stars">★ ${m.s}/${m.m}<div class="bar" style="color:var(--sun);background:var(--paper2);width:90px"><i style="width:${m.m?m.s/m.m*100:0}%"></i></div></td>
+     ${m.d.map((x,j)=>`<td>${x}/${(m.dn||[])[j]||CASES[j].cards.length}</td>`).join("")}<td>${curLabel(m.cur)}</td><td>${fmtTime(m.tm*1000)}</td><td>${ago(LIVE.now-r.updated)}</td>
+     <td><button class="btn ghost sm" title="Borrar progreso" onclick="askDel('${esc(r.email)}')">🗑</button></td></tr>`}).join("")}</table></div>`:`<p>Todavía no hay nadie jugando.</p>`}</div>`;
+}
+function curLabel(cur){if(!cur)return"—";const [cid,n]=cur.split(":");const c=CASES.find(x=>x.id===cid);return c?`${c.emoji} ${n?"carta "+n:"inicio"}`:"—"}
+function askDel(email){modal(`<h3 style="margin-top:0">¿Borrar el progreso?</h3><p>Se borrará todo el progreso de <b>${esc(email)}</b> en DROP LAB. No se puede deshacer. Su cuenta de Odoo no se toca.</p><div class="actions"><button class="btn ghost" onclick="closeModal()">Cancelar</button><button class="btn pink" onclick="closeModal();gas('deleteStudent','${esc(email)}').then(loadLive).catch(e=>toast('No se pudo borrar'))">Borrar</button></div>`)}
+function teacherView(){
+  const rows=S.teacher.map(readCode).filter(x=>x&&!x.err).sort((a,b)=>b.s-a.s||a.tm-b.tm);
+  const medal=["🥇","🥈","🥉"];
+  return `<div class="crumbs"><button class="btn ghost sm" onclick="go('${S.team?"home":"start"}')">← Volver</button><span class="pill">👩‍🏫 Panel docente</span><span style="color:var(--muted);font-size:14px">Zona para la profe: ranking, rúbrica y reinicio.</span></div>
+  ${liveBlock()}
+  <div class="panel" style="margin-top:${ONLINE&&ONLINE.teacher?16:12}px"><h2 style="margin-top:0;font-size:22px">🏆 Ranking ${ONLINE&&ONLINE.teacher?"con códigos (versión de demostración)":"de la clase"}</h2>
+  <p style="color:var(--muted);margin-top:0">Pega los códigos de resultados de tu alumnado, uno por línea. Desempate: menos tiempo total.</p>
+  <textarea id="codes" rows="4" placeholder="DL-...">${esc(S.teacher.join("\n"))}</textarea>
+  <div class="row" style="margin-top:10px"><button class="btn" onclick="loadCodes()">Actualizar ranking</button><button class="btn ghost" onclick="S.teacher=[];save();render()">Vaciar</button></div>
+  <div id="cerr" class="fb bad"></div>
+  ${rows.length?`<table class="podium" style="margin-top:14px"><tr><th></th><th>Alumno/a · marca</th><th>Estrellas</th>${CASES.map(c=>`<th>${c.emoji}</th>`).join("")}<th>Tiempo</th></tr>
+   ${rows.map((r,i)=>`<tr><td>${medal[i]||i+1}</td><td><b>${esc(r.n||"")}</b><br><small style="color:var(--muted)">${r.e||""} ${esc(r.t)}</small></td><td class="stars">★ ${r.s}/${r.m}</td>${r.c.map((x,j)=>`<td>${x}<small style="color:var(--muted)"> (${r.d[j]}/${CASES[j].cards.length})</small></td>`).join("")}<td>${fmtTime(r.tm*1000)}</td></tr>`).join("")}</table>`:""}
+  </div>
+  <div class="panel" style="margin-top:16px"><h3 style="margin-top:0;font-size:17px">🎨 Rúbrica del reto del logo</h3>
+  <p style="color:var(--muted);margin-top:0">En la app el reto vale 2★ si el alumno o alumna lo completa. Esta rúbrica es para valorar la calidad (de 4 a 12 puntos).</p>
+  <table class="rub"><tr><th>Criterio</th><th>1 · Por mejorar</th><th>2 · Bien</th><th>3 · Excelente</th></tr>
+  <tr><td><b>Legibilidad</b></td><td>No se lee en tamaño pequeño.</td><td>Se lee, pero pierde detalles.</td><td>Se reconoce incluso como icono de perfil.</td></tr>
+  <tr><td><b>Coherencia</b></td><td>No tiene relación con el nombre ni con el público.</td><td>Encaja con el nombre o con el público.</td><td>Transmite el estilo y los valores de la marca.</td></tr>
+  <tr><td><b>Versatilidad</b></td><td>Solo funciona a color y sobre un fondo.</td><td>Funciona en blanco y negro con algún ajuste.</td><td>Funciona en B/N, en fondos claros y oscuros y en prendas.</td></tr>
+  <tr><td><b>Originalidad</b></td><td>Se parece mucho a una marca existente.</td><td>Parte de una plantilla, pero con cambios propios.</td><td>Propuesta propia y reconocible.</td></tr></table></div>
+  <div class="panel" style="margin-top:16px"><h3 style="margin-top:0;font-size:17px">🧹 Reiniciar este dispositivo</h3><p style="color:var(--muted);margin-top:0">Borra la marca y el progreso guardado en este navegador. Úsalo entre clases si el ordenador es compartido. Escribe <b>BORRAR</b> para confirmar.</p>
+  <div class="row"><input type="text" id="wipe" placeholder="BORRAR"><button class="btn pink" onclick="wipe()">Reiniciar</button></div></div>`;
+}
+function loadCodes(){const lines=$("#codes").value.split(/\s+/).filter(Boolean);const bad=lines.filter(l=>{const r=readCode(l);return !r||r.err});S.teacher=lines.filter(l=>{const r=readCode(l);return r&&!r.err});save();render();if(bad.length)$("#cerr").textContent=`⚠ ${bad.length} código(s) no válido(s) o modificado(s).`}
+function wipe(){if($("#wipe").value.trim().toUpperCase()!=="BORRAR"){toast("Escribe BORRAR para confirmar");return}const t=S.teacher;S=blank();S.teacher=t;save();go("start")}
+
+let _tick=0;
+setInterval(()=>{if(view.name==="teacher"&&ONLINE&&ONLINE.teacher)loadLive()},30000);
+setInterval(()=>{
+  if(!view.caseId||document.visibilityState!=="visible"||!S.team)return;
+  const c=CASES.find(x=>x.id===view.caseId);if(!c||!S.setupDone[c.id]||caseDone(c))return;
+  S.el[c.id]=(S.el[c.id]||0)+1;if(++_tick%5===0)save();
+  const e=$("#tmr");if(e)e.textContent=fmtTime(caseTime(c));
+},1000);
+boot();
+</script>
+</body>
+</html>
